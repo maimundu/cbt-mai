@@ -1,0 +1,424 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengaturan Sistem — CBT Online</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --utama: #7c3aed;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --muda: #f8fafc;
+            --batas: #e2e8f0;
+            --sukses: #10b981;
+            --peringatan: #f59e0b;
+            --bahaya: #ef4444;
+            --biru: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--utama), #6d28d9);
+            color: white;
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .nav-kiri {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-kiri a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .nav-kiri a:hover { opacity: 1; }
+
+        .nav-kiri h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-kanan {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .tombol-keluar {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .tombol-keluar:hover { background: rgba(255,255,255,0.3); }
+
+        .wadah {
+            max-width: 700px;
+            margin: 24px auto;
+            padding: 0 20px;
+        }
+
+        .kartu {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+
+        .kartu h2 {
+            color: var(--gelap);
+            font-size: 18px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--batas);
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 18px;
+        }
+
+        @media (min-width: 640px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .form-penuh { grid-column: 1 / -1; }
+
+        .grup-input label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--gelap);
+            font-size: 14px;
+        }
+
+        .bantuan {
+            font-size: 12px;
+            color: var(--abu);
+            margin-top: 4px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 15px;
+            border: 2px solid var(--batas);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--utama);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .baris-tombol {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+            flex-wrap: wrap;
+        }
+
+        .tombol {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .tombol:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .tombol-primer { background: var(--utama); color: white; }
+        .tombol-sukses { background: var(--sukses); color: white; }
+        .tombol-bahaya { background: var(--bahaya); color: white; }
+        .tombol-abu { background: var(--abu); color: white; }
+
+        .pesan {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .pesan-sukses { background: #dcfce7; color: #166534; display: block; }
+        .pesan-bahaya { background: #fee2e2; color: #dc2626; display: block; }
+
+        .info-konfigurasi {
+            background: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            padding: 14px;
+            border-radius: 0 10px 10px 0;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #1e40af;
+            line-height: 1.6;
+        }
+
+        .blok-tidak-ditemukan {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .blok-tidak-ditemukan i {
+            font-size: 64px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
+
+        .sembunyi { display: none !important; }
+    </style>
+</head>
+<body>
+
+<nav id="areaTerkunci" class="terkunci">
+    <div class="nav-kiri">
+        <a href="admin-dashboard.html"><i class="fa-solid fa-chevron-left"></i> Kembali</a>
+        <h1>⚙️ Pengaturan Sistem</h1>
+    </div>
+    <div class="nav-kanan">
+        <span id="namaAdmin" style="font-size:14px; opacity:0.9;">Admin</span>
+        <button class="tombol-keluar" onclick="keluarAdmin()">
+            <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </button>
+    </div>
+</nav>
+
+<div class="terkunci" id="kontenAdmin">
+    <div class="wadah">
+
+        <!-- Pesan Notifikasi -->
+        <div id="pesanNotif" class="pesan"></div>
+
+        <!-- KARTU 1: Pengaturan Waktu & Nilai -->
+        <div class="kartu">
+            <h2>⏱️ Pengaturan Ujian</h2>
+
+            <form onsubmit="return simpanPengaturan(event)">
+                <div class="form-grid">
+                    <div class="grup-input">
+                        <label for="waktuUjian">Waktu Ujian (Menit)</label>
+                        <input type="number" id="waktuUjian" min="5" max="300" value="60" required>
+                        <div class="bantuan">Durasi waktu yang diberikan untuk setiap sesi ujian</div>
+                    </div>
+
+                    <div class="grup-input">
+                        <label for="nilaiLulus">Nilai Kelulusan Minimal</label>
+                        <input type="number" id="nilaiLulus" min="0" max="100" value="70" required>
+                        <div class="bantuan">Skor minimal untuk dinyatakan lulus ujian</div>
+                    </div>
+
+                    <div class="grup-input">
+                        <label for="tampilkanJawaban">Tampilkan Jawaban Benar Setelah Selesai</label>
+                        <select id="tampilkanJawaban">
+                            <option value="ya">Ya — Tampilkan di halaman hasil</option>
+                            <option value="tidak">Tidak — Sembunyikan jawaban</option>
+                        </select>
+                    </div>
+
+                    <div class="grup-input">
+                        <label for="izinkanUlang">Izinkan Peserta Ulang Ujian</label>
+                        <select id="izinkanUlang">
+                            <option value="ya">Ya — Bisa mengulang berkali-kali</option>
+                            <option value="tidak">Tidak — Sekali ujian selesai, tidak bisa ulang</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div class="baris-tombol" style="margin-top:18px;">
+                    <button type="submit" class="tombol tombol-sukses">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Pengaturan
+                    </button>
+                    <button type="reset" class="tombol tombol-abu" onclick="muatPengaturan()">
+                        <i class="fa-solid fa-rotate-right"></i> Reset
+                    </button>
+                </div>
+            </form>
+
+            <div class="info-konfigurasi">
+                <strong>📌 Catatan:</strong> Pengaturan yang disimpan akan langsung berlaku untuk ujian berikutnya. Ujian yang sedang berjalan tidak terpengaruh oleh perubahan pengaturan.
+            </div>
+        </div>
+
+        <!-- KARTU 2: Konfigurasi Sistem -->
+        <div class="kartu">
+            <h2>🔧 Konfigurasi Sistem</h2>
+
+            <div class="form-grid">
+                <div class="grup-input">
+                    <label>Nama Sekolah / Instansi</label>
+                    <input type="text" id="namaInstansi" placeholder="Masukkan nama sekolah atau instansi">
+                </div>
+
+                <div class="grup-input">
+                    <label>Tahun Ajaran / Periode</label>
+                    <input type="text" id="tahunAjaran" placeholder="Contoh: 2025/2026" value="2025/2026">
+                </div>
+            </div>
+
+            <div class="baris-tombol" style="margin-top:18px;">
+                <button class="tombol tombol-primer" onclick="simpanKonfigurasi()">
+                    <i class="fa-solid fa-sliders"></i> Simpan Konfigurasi
+                </button>
+                <button class="tombol tombol-bahaya" onclick="konfirmasiResetData()">
+                    <i class="fa-solid fa-triangle-exclamation"></i> Reset Semua Data
+                </button>
+            </div>
+
+            <div class="info-konfigurasi" style="border-left-color: #f59e0b; background: #fffbeb; color: #92400e;">
+                <strong>⚠️ Peringatan:</strong> Tombol "Reset Semua Data" akan menghapus SEMUA soal, pengguna, dan hasil ujian. Tindakan ini tidak dapat dibatalkan!
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Halaman Terkunci -->
+<div id="blokKunci" class="blok-tidak-ditemukan sembunyi">
+    <i class="fa-solid fa-lock"></i>
+    <h3>Akses Terkunci</h3>
+    <p style="color:#64748b; margin:10px 0 24px;">Anda harus login sebagai Admin untuk mengubah pengaturan sistem.</p>
+    <a href="admin-login.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Admin</a>
+    <br><br>
+    <a href="../index.html" style="color:#64748b; font-size:14px;">← Kembali ke Beranda</a>
+</div>
+
+<script>
+// ======================================
+// CEK HAK AKSES & MUAT DATA SAAT DIBUKA
+// ======================================
+window.onload = function() {
+    const dataAdmin = JSON.parse(localStorage.getItem('adminCBT') || 'null');
+    if (dataAdmin && dataAdmin.masuk === true) {
+        document.getElementById('areaTerkunci').classList.remove('terkunci');
+        document.getElementById('kontenAdmin').classList.remove('terkunci');
+        document.getElementById('blokKunci').style.display = 'none';
+        document.getElementById('namaAdmin').textContent = dataAdmin.nama;
+    } else {
+        document.getElementById('blokKunci').classList.remove('sembunyi');
+        return;
+    }
+
+    muatPengaturan();
+};
+
+function keluarAdmin() {
+    if (confirm("Yakin ingin keluar?")) {
+        localStorage.removeItem('adminCBT');
+        window.location.href = "admin-login.html";
+    }
+}
+
+// ======================================
+// SIMPAN & MUAT PENGATURAN UJIAN
+// ======================================
+function muatPengaturan() {
+    const pengaturan = JSON.parse(localStorage.getItem('pengaturanCBT') || '{}');
+
+    // Isi nilai default jika belum ada
+    document.getElementById('waktuUjian').value = pengaturan.waktuUjian || 60;
+    document.getElementById('nilaiLulus').value = pengaturan.nilaiLulus || 70;
+    document.getElementById('tampilkanJawaban').value = pengaturan.tampilkanJawaban || 'tidak';
+    document.getElementById('izinkanUlang').value = pengaturan.izinkanUlang || 'ya';
+
+    // Konfigurasi instansi
+    document.getElementById('namaInstansi').value = pengaturan.namaInstansi || '';
+    document.getElementById('tahunAjaran').value = pengaturan.tahunAjaran || '2025/2026';
+}
+
+function simpanPengaturan(event) {
+    event.preventDefault();
+
+    const pengaturan = {
+        waktuUjian: parseInt(document.getElementById('waktuUjian').value),
+        nilaiLulus: parseInt(document.getElementById('nilaiLulus').value),
+        tampilkanJawaban: document.getElementById('tampilkanJawaban').value,
+        izinkanUlang: document.getElementById('izinkanUlang').value,
+        namaInstansi: document.getElementById('namaInstansi').value.trim(),
+        tahunAjaran: document.getElementById('tahunAjaran').value.trim()
+    };
+
+    localStorage.setItem('pengaturanCBT', JSON.stringify(pengaturan));
+    tampilkanPesan("✅ Pengaturan ujian berhasil disimpan!", "sukses");
+    return false;
+}
+
+function simpanKonfigurasi() {
+    const pengaturan = JSON.parse(localStorage.getItem('pengaturanCBT') || '{}');
+    pengaturan.namaInstansi = document.getElementById('namaInstansi').value.trim();
+    pengaturan.tahunAjaran = document.getElementById('tahunAjaran').value.trim();
+
+    localStorage.setItem('pengaturanCBT', JSON.stringify(pengaturan));
+    tampilkanPesan("✅ Konfigurasi sistem berhasil disimpan!", "sukses");
+}
+
+// ======================================
+// RESET SEMUA DATA
+// ======================================
+function konfirmasiResetData() {
+    if (confirm("⚠️ PERINGATAN KERAS!\n\nAnda akan menghapus SEMUA data:\n- Semua Soal\n- Semua Pengguna\n- Semua Hasil Ujian\n- Semua Pengaturan\n\nTindakan ini TIDAK DAPAT dibatalkan!\n\nKlik OK untuk lanjutkan.")) {
+        if (confirm("Yakin BENAR-BENAR ingin menghapus SEMUA data?")) {
+            localStorage.clear();
+            tampilkanPesan("🗑️ Semua data telah dihapus! Halaman akan dimuat ulang.", "bahaya");
+            setTimeout(() => location.reload(), 2000);
+        }
+    }
+}
+
+// ======================================
+// PESAN NOTIFIKASI
+// ======================================
+function tampilkanPesan(teks, jenis) {
+    const kotak = document.getElementById('pesanNotif');
+    kotak.className = "pesan " + (jenis === "sukses" ? "pesan-sukses" : "pesan-bahaya");
+    kotak.textContent = teks;
+    setTimeout(() => {
+        kotak.style.display = "none";
+    }, 4000);
+}
+</script>
+
+</body>
+</html>
