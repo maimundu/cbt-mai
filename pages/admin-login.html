@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Admin — Sistem CBT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --utama: #7c3aed;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --batas: #e2e8f0;
+            --salah: #ef4444;
+            --latar-grad1: #faf5ff;
+            --latar-grad2: #f3e8ff;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--latar-grad1) 0%, var(--latar-grad2) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .wadah {
+            max-width: 440px;
+            width: 100%;
+        }
+
+        .kartu-masuk {
+            background: white;
+            border-radius: 24px;
+            padding: 40px 32px;
+            box-shadow: 0 16px 48px rgba(124, 58, 237, 0.18);
+            animation: naik 0.7s ease;
+        }
+
+        @keyframes naik {
+            dari { opacity: 0; transform: translateY(30px); }
+            ke { opacity: 1; transform: translateY(0); }
+        }
+
+        .kembali {
+            text-align: left;
+            margin-bottom: 20px;
+        }
+
+        .kembali a {
+            color: var(--abu);
+            text-decoration: none;
+            font-size: 14px;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: color 0.2s;
+        }
+
+        .kembali a:hover {
+            color: var(--utama);
+        }
+
+        .ikon-besar {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+
+        .ikon-besar i {
+            font-size: 48px;
+            color: var(--utama);
+        }
+
+        h2 {
+            text-align: center;
+            color: var(--gelap);
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .deskripsi {
+            text-align: center;
+            color: var(--abu);
+            font-size: 14px;
+            margin-bottom: 32px;
+        }
+
+        .grup-input {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--gelap);
+            font-size: 14px;
+        }
+
+        .input-bungkus {
+            position: relative;
+        }
+
+        .input-bungkus i {
+            position: absolute;
+            left: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--abu);
+            font-size: 18px;
+        }
+
+        input {
+            width: 100%;
+            padding: 14px 14px 14px 48px;
+            font-size: 15px;
+            border: 2px solid var(--batas);
+            border-radius: 12px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        input:focus {
+            border-color: var(--utama);
+            box-shadow: 0 0 0 4px rgba(124, 58, 237, 0.1);
+        }
+
+        .tombol-masuk {
+            width: 100%;
+            padding: 15px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            background: linear-gradient(135deg, var(--utama), #6d28d9);
+            color: white;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .tombol-masuk:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 24px rgba(124, 58, 237, 0.3);
+        }
+
+        .pesan-kesalahan {
+            margin-top: 16px;
+            padding: 12px;
+            background: #fef2f2;
+            color: var(--salah);
+            border-radius: 10px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .bawah {
+            margin-top: 28px;
+            text-align: center;
+            font-size: 14px;
+            color: var(--abu);
+        }
+
+        .peringatan {
+            margin-top: 16px;
+            padding: 12px;
+            background: #fef3c7;
+            color: #92400e;
+            border-radius: 10px;
+            font-size: 13px;
+        }
+
+        @media (max-width: 480px) {
+            .kartu-masuk { padding: 30px 20px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wadah">
+    <div class="kartu-masuk">
+        <div class="kembali">
+            <a href="../index.html"><i class="fa-solid fa-chevron-left"></i> Kembali ke Beranda</a>
+        </div>
+
+        <div class="ikon-besar">
+            <i class="fa-solid fa-shield-halved"></i>
+        </div>
+
+        <h2>Login Admin</h2>
+        <p class="deskripsi">Masuk untuk mengelola soal ujian & sistem</p>
+
+        <form id="formAdmin" onsubmit="return verifikasiAdmin()">
+            <div class="grup-input">
+                <label for="adminUser">Nama Pengguna Admin</label>
+                <div class="input-bungkus">
+                    <i class="fa-solid fa-user-tie"></i>
+                    <input type="text" id="adminUser" placeholder="Masukkan nama pengguna admin" required>
+                </div>
+            </div>
+
+            <div class="grup-input">
+                <label for="adminPass">Kata Sandi Admin</label>
+                <div class="input-bungkus">
+                    <i class="fa-solid fa-lock"></i>
+                    <input type="password" id="adminPass" placeholder="Masukkan kata sandi admin" required>
+                </div>
+            </div>
+
+            <button type="submit" class="tombol-masuk">
+                <i class="fa-solid fa-right-to-bracket"></i> &nbsp; Masuk Sebagai Admin
+            </button>
+
+            <div class="pesan-kesalahan" id="pesanError"></div>
+        </form>
+
+        <div class="bawah">
+            <div class="peringatan">
+                <i class="fa-solid fa-circle-info"></i> Akun ini untuk pengelola sistem saja.<br>
+                Contoh: <strong>admin</strong> / <strong>admin123</strong>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Kredensial Admin
+function verifikasiAdmin() {
+    const user = document.getElementById('adminUser').value.trim();
+    const pass = document.getElementById('adminPass').value.trim();
+    const pesan = document.getElementById('pesanError');
+
+    // Akun admin contoh — silakan ubah sesuai kebutuhan
+    if (user === "admin" && pass === "admin123") {
+        localStorage.setItem('adminCBT', JSON.stringify({
+            nama: user,
+            status: "admin",
+            masuk: true,
+            waktu: new Date().toLocaleString('id-ID')
+        }));
+        window.location.href = "admin-dashboard.html";
+        return false;
+    } else {
+        pesan.style.display = "block";
+        pesan.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> Nama pengguna atau kata sandi admin salah!";
+        return false;
+    }
+}
+</script>
+
+</body>
+</html>
