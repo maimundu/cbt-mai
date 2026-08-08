@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistem CBT — Ujian Berbasis Komputer</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --utama: #2563eb;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --muda: #f1f5f9;
+            --benar: #10b981;
+            --admin: #7c3aed;
+            --latar-grad1: #eff6ff;
+            --latar-grad2: #dbeafe;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, var(--latar-grad1) 0%, var(--latar-grad2) 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .wadah {
+            max-width: 480px;
+            width: 100%;
+            text-align: center;
+        }
+
+        .kartu-utama {
+            background: white;
+            border-radius: 24px;
+            padding: 48px 36px;
+            box-shadow: 0 16px 48px rgba(37, 99, 235, 0.15);
+            animation: muncul 0.7s ease;
+        }
+
+        @keyframes muncul {
+            dari { opacity: 0; transform: translateY(30px); }
+            ke { opacity: 1; transform: translateY(0); }
+        }
+
+        .logo {
+            width: 90px;
+            height: 90px;
+            background: linear-gradient(135deg, var(--utama), #1d4ed8);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 24px;
+            box-shadow: 0 8px 20px rgba(37, 99, 235, 0.3);
+        }
+
+        .logo i {
+            font-size: 44px;
+            color: white;
+        }
+
+        h1 {
+            color: var(--gelap);
+            font-size: 28px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+
+        .sub-judul {
+            color: var(--abu);
+            font-size: 15px;
+            margin-bottom: 36px;
+            line-height: 1.6;
+        }
+
+        .menu {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .tombol {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 15px 24px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 14px;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.3s ease;
+        }
+
+        .tombol:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 24px rgba(0,0,0,0.12);
+        }
+
+        .tombol-primer {
+            background: linear-gradient(135deg, var(--utama), #1d4ed8);
+            color: white;
+        }
+
+        .tombol-sukses {
+            background: linear-gradient(135deg, var(--benar), #059669);
+            color: white;
+        }
+
+        .tombol-admin {
+            background: linear-gradient(135deg, var(--admin), #6d28d9);
+            color: white;
+        }
+
+        .tombol i {
+            font-size: 18px;
+        }
+
+        .pembatas {
+            display: flex;
+            align-items: center;
+            margin: 24px 0;
+            color: var(--abu);
+            font-size: 13px;
+        }
+
+        .pembatas::before, .pembatas::after {
+            content: "";
+            flex: 1;
+            height: 1px;
+            background: #e2e8f0;
+        }
+
+        .pembatas span {
+            padding: 0 16px;
+        }
+
+        .info {
+            margin-top: 28px;
+            font-size: 13px;
+            color: var(--abu);
+            line-height: 1.6;
+        }
+
+        .info a {
+            color: var(--utama);
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        @media (max-width: 480px) {
+            .kartu-utama { padding: 36px 24px; }
+            h1 { font-size: 24px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="wadah">
+    <div class="kartu-utama">
+        <div class="logo">
+            <i class="fa-solid fa-computer"></i>
+        </div>
+
+        <h1>Sistem CBT</h1>
+        <p class="sub-judul">Ujian Berbasis Komputer<br>Cepat, Akurat & Mudah Digunakan</p>
+
+        <div class="menu">
+            <a href="pages/login.html" class="tombol tombol-primer">
+                <i class="fa-solid fa-user"></i>
+                Masuk Sebagai Pengguna
+            </a>
+
+            <a href="pages/admin-login.html" class="tombol tombol-admin">
+                <i class="fa-solid fa-shield-halved"></i>
+                Masuk Sebagai Admin
+            </a>
+        </div>
+
+        <div class="pembatas"><span>pilih peran Anda</span></div>
+
+        <div class="info">
+            Masuk sebagai Admin untuk mengelola soal ujian.<br>
+            Butuh bantuan? <a href="#">Hubungi Admin</a>
+        </div>
+    </div>
+</div>
+
+</body>
+</html>
