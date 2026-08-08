@@ -233,27 +233,55 @@
 </div>
 
 <script>
-// Kredensial Admin
-function verifikasiAdmin() {
-    const user = document.getElementById('adminUser').value.trim();
-    const pass = document.getElementById('adminPass').value.trim();
-    const pesan = document.getElementById('pesanError');
+// ==========================================================
+// ✅ GANTI URL INI DENGAN URL MILIK ANDA DARI APPS SCRIPT
+// ==========================================================
+const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzXXXXXX/exec";
 
-    // Akun admin contoh — silakan ubah sesuai kebutuhan
-    if (user === "admin" && pass === "admin123") {
-        localStorage.setItem('adminCBT', JSON.stringify({
-            nama: user,
-            status: "admin",
-            masuk: true,
-            waktu: new Date().toLocaleString('id-ID')
-        }));
-        window.location.href = "admin-dashboard.html";
-        return false;
-    } else {
-        pesan.style.display = "block";
-        pesan.innerHTML = "<i class='fa-solid fa-circle-exclamation'></i> Nama pengguna atau kata sandi admin salah!";
-        return false;
-    }
+// ==========================================================
+// 🔧 FUNGSI BANTUAN: BACA DATA DARI GOOGLE SHEETS
+// ==========================================================
+async function bacaData(aksi, param = {}) {
+  const p = new URLSearchParams({ action: aksi, ...param });
+  const res = await fetch(`${URL_GOOGLE_SHEETS}?${p}`);
+  return await res.json();
+}
+
+// ======================================
+// ✅ FUNGSI LOGIN — CEK DARI GOOGLE SHEETS
+// ======================================
+async function login() {
+  const user = document.getElementById('user').value.trim();
+  const pass = document.getElementById('pass').value.trim();
+
+  if (!user || !pass) {
+    alert("⚠️ Silakan isi Nama Pengguna dan Kata Sandi!");
+    return;
+  }
+
+  // ✅ CEK AKUN LANGSUNG DARI GOOGLE SHEETS
+  const res = await bacaData('loginAdmin', { user, pass });
+
+  if (res.status === "sukses") {
+    // Simpan status login ke browser
+    localStorage.setItem('adminCBT', JSON.stringify({
+      nama: res.nama,
+      masuk: true
+    }));
+    // Buka Halaman Dasbor Admin
+    window.location.href = "admin-dashboard.html";
+  } else {
+    alert("❌ Nama pengguna atau kata sandi salah!");
+  }
+}
+
+// ======================================
+// TEKAN TOMBOL ENTER UNTUK LOGIN
+// ======================================
+function tekanEnter(event) {
+  if (event.key === "Enter") {
+    login();
+  }
 }
 </script>
 
