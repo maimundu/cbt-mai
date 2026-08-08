@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pengelolaan Pengguna — Admin CBT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --utama: #7c3aed;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --muda: #f8fafc;
+            --batas: #e2e8f0;
+            --sukses: #10b981;
+            --peringatan: #f59e0b;
+            --bahaya: #ef4444;
+            --biru: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--utama), #6d28d9);
+            color: white;
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .nav-kiri {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-kiri a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .nav-kiri a:hover { opacity: 1; }
+
+        .nav-kiri h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-kanan {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .tombol-keluar {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .tombol-keluar:hover { background: rgba(255,255,255,0.3); }
+
+        .wadah {
+            max-width: 900px;
+            margin: 24px auto;
+            padding: 0 20px;
+        }
+
+        .kartu {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+
+        .kartu h2 {
+            color: var(--gelap);
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 16px;
+        }
+
+        @media (min-width: 768px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+        }
+
+        .form-penuh { grid-column: 1 / -1; }
+
+        .grup-input label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--gelap);
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 15px;
+            border: 2px solid var(--batas);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--utama);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .baris-tombol {
+            display: flex;
+            gap: 10px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .tombol {
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .tombol:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .tombol-primer { background: var(--utama); color: white; }
+        .tombol-sukses { background: var(--sukses); color: white; }
+        .tombol-bahaya { background: var(--bahaya); color: white; }
+        .tombol-abu { background: var(--abu); color: white; }
+        .tombol-biru { background: var(--biru); color: white; }
+
+        .daftar-pengguna {
+            margin-top: 20px;
+        }
+
+        .tabel-pengguna {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .tabel-pengguna th,
+        .tabel-pengguna td {
+            padding: 12px 14px;
+            text-align: left;
+            border-bottom: 1px solid var(--batas);
+        }
+
+        .tabel-pengguna th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--gelap);
+            font-size: 14px;
+        }
+
+        .tabel-pengguna tr:hover {
+            background: #faf5ff;
+        }
+
+        .tombol-aksi {
+            padding: 6px 10px;
+            font-size: 13px;
+            border-radius: 6px;
+            border: none;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            margin-right: 4px;
+        }
+
+        .edit { background: #dbeafe; color: #1d4ed8; }
+        .hapus { background: #fee2e2; color: #dc2626; }
+
+        .kosong {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--abu);
+        }
+
+        .kosong i { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+        .sembunyi { display: none !important; }
+
+        .pesan {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .pesan-sukses { background: #dcfce7; color: #166534; display: block; }
+        .pesan-bahaya { background: #fee2e2; color: #dc2626; display: block; }
+
+        .info-kunci {
+            background: #eff6ff;
+            border-left: 3px solid #3b82f6;
+            padding: 12px;
+            margin-top: 16px;
+            font-size: 13px;
+            color: #1e40af;
+            border-radius: 0 8px 8px 0;
+        }
+    </style>
+</head>
+<body>
+
+<nav id="areaTerkunci" class="terkunci">
+    <div class="nav-kiri">
+        <a href="admin-dashboard.html"><i class="fa-solid fa-chevron-left"></i> Kembali</a>
+        <h1>👤 Pengelolaan Pengguna</h1>
+    </div>
+    <div class="nav-kanan">
+        <span id="namaAdmin" style="font-size:14px; opacity:0.9;">Admin</span>
+        <button class="tombol-keluar" onclick="keluarAdmin()">
+            <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </button>
+    </div>
+</nav>
+
+<div class="terkunci" id="kontenAdmin">
+    <div class="wadah">
+        <!-- Form Tambah/Edit Pengguna -->
+        <div class="kartu">
+            <h2 id="judulForm">➕ Tambah Pengguna Baru</h2>
+            <div id="pesanNotif" class="pesan"></div>
+
+            <form id="formPengguna" onsubmit="return simpanPengguna(event)">
+                <input type="hidden" id="indeksEdit" value="-1">
+
+                <div class="form-grid">
+                    <div class="grup-input form-penuh">
+                        <label for="namaLengkap">👤 Nama Lengkap Peserta</label>
+                        <input type="text" id="namaLengkap" placeholder="Masukkan nama lengkap peserta" required>
+                    </div>
+
+                    <div class="grup-input">
+                        <label for="kelas">🏫 Kelas / Jurusan</label>
+                        <input type="text" id="kelas" placeholder="Contoh: XII IPA 1" required>
+                    </div>
+
+                    <div class="grup-input">
+                        <label for="username">🔐 Username (Login)</label>
+                        <input type="text" id="username" placeholder="Buat username untuk login" required>
+                    </div>
+
+                    <div class="grup-input">
+                        <label for="password">🔑 Password (Login)</label>
+                        <input type="password" id="password" placeholder="Buat password untuk login" required>
+                    </div>
+                </div>
+
+                <div class="baris-tombol" style="margin-top:16px;">
+                    <button type="submit" class="tombol tombol-sukses">
+                        <i class="fa-solid fa-floppy-disk"></i> Simpan Pengguna
+                    </button>
+                    <button type="button" class="tombol tombol-abu" onclick="resetForm()">
+                        <i class="fa-solid fa-rotate-right"></i> Reset Form
+                    </button>
+                </div>
+            </form>
+
+            <div class="info-kunci">
+                <strong>📌 Catatan:</strong> Username & Password yang dibuat di sini akan digunakan peserta untuk login ke halaman ujian. Nama peserta akan otomatis muncul di daftar pilihan pada halaman ujian.
+            </div>
+        </div>
+
+        <!-- Daftar Pengguna -->
+        <div class="kartu">
+            <h2>📋 Daftar Pengguna Terdaftar (<span id="jmlPengguna">0</span>)</h2>
+
+            <div class="daftar-pengguna">
+                <table class="tabel-pengguna">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Lengkap</th>
+                            <th>Kelas</th>
+                            <th>Username</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="isiTabelPengguna"></tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Halaman Terkunci -->
+<div id="blokKunci" style="text-align:center; padding:80px 20px;">
+    <i class="fa-solid fa-lock" style="font-size:64px; color:#cbd5e1;"></i>
+    <h3 style="margin-top:20px; color:#475569;">Akses Terkunci</h3>
+    <p style="color:#64748b; margin:10px 0 24px;">Anda harus login sebagai admin untuk mengelola pengguna.</p>
+    <a href="admin-login.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Admin</a>
+    <br><br>
+    <a href="../index.html" style="color:#64748b; font-size:14px;">← Kembali ke Beranda</a>
+</div>
+
+<script>
+// ==================== INISIALISASI & KEAMANAN ====================
+let daftarPengguna = [];
+
+window.onload = function() {
+    // Cek login admin
+    const dataAdmin = JSON.parse(localStorage.getItem('adminCBT') || 'null');
+    if (dataAdmin && dataAdmin.masuk === true) {
+        document.getElementById('areaTerkunci').classList.remove('terkunci');
+        document.getElementById('kontenAdmin').classList.remove('terkunci');
+        document.getElementById('blokKunci').style.display = 'none';
+        document.getElementById('namaAdmin').textContent = dataAdmin.nama;
+    } else {
+        return;
+    }
+
+    muatPengguna();
+    tampilkanDaftarPengguna();
+};
+
+function keluarAdmin() {
+    if (confirm("Yakin ingin keluar?")) {
+        localStorage.removeItem('adminCBT');
+        window.location.href = "admin-login.html";
+    }
+}
+
+// ==================== PENYIMPANAN DATA ====================
+function muatPengguna() {
+    const tersimpan = localStorage.getItem('daftarPenggunaCBT');
+    if (tersimpan) {
+        daftarPengguna = JSON.parse(tersimpan);
+    } else {
+        daftarPengguna = [];
+        simpanKePenyimpanan();
+    }
+}
+
+function simpanKePenyimpanan() {
+    localStorage.setItem('daftarPenggunaCBT', JSON.stringify(daftarPengguna));
+}
+
+// ==================== FORM TAMBAH/EDIT ====================
+function simpanPengguna(event) {
+    event.preventDefault();
+    const indeks = parseInt(document.getElementById('indeksEdit').value);
+    const nama = document.getElementById('namaLengkap').value.trim();
+    const kelas = document.getElementById('kelas').value.trim();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    // Validasi username tidak ganda (kecuali saat edit diri sendiri)
+    const duplikat = daftarPengguna.find((p, i) =>
+        p.username === username && i !== indeks
+    );
+    if (duplikat) {
+        tampilkanPesan("❌ Username sudah digunakan! Silakan pilih username lain.", "bahaya");
+        return false;
+    }
+
+    const penggunaBaru = {
+        nama: nama,
+        kelas: kelas,
+        username: username,
+        password: password
+    };
+
+    if (indeks >= 0) {
+        // Edit pengguna yang sudah ada
+        if (!password) penggunaBaru.password = daftarPengguna[indeks].password;
+        daftarPengguna[indeks] = penggunaBaru;
+        tampilkanPesan("✅ Data pengguna berhasil diperbarui!", "sukses");
+    } else {
+        // Tambah pengguna baru
+        daftarPengguna.push(penggunaBaru);
+        tampilkanPesan("✅ Pengguna berhasil ditambahkan!", "sukses");
+    }
+
+    simpanKePenyimpanan();
+    tampilkanDaftarPengguna();
+    resetForm();
+    return false;
+}
+
+function editPengguna(indeks) {
+    const p = daftarPengguna[indeks];
+    document.getElementById('indeksEdit').value = indeks;
+    document.getElementById('namaLengkap').value = p.nama;
+    document.getElementById('kelas').value = p.kelas;
+    document.getElementById('username').value = p.username;
+    document.getElementById('password').value = p.password;
+    document.getElementById('judulForm').innerHTML = "✏️ Edit Data Pengguna";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function hapusPengguna(indeks) {
+    if (confirm("⚠️ Yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan!")) {
+        daftarPengguna.splice(indeks, 1);
+        simpanKePenyimpanan();
+        tampilkanDaftarPengguna();
+        tampilkanPesan("🗑️ Pengguna berhasil dihapus!", "sukses");
+    }
+}
+
+function resetForm() {
+    document.getElementById('formPengguna').reset();
+    document.getElementById('indeksEdit').value = "-1";
+    document.getElementById('judulForm').innerHTML = "➕ Tambah Pengguna Baru";
+    sembunyikanPesan();
+}
+
+// ==================== TAMPILAN DAFTAR PENGGUNA ====================
+function tampilkanDaftarPengguna() {
+    const wadah = document.getElementById('isiTabelPengguna');
+    document.getElementById('jmlPengguna').textContent = daftarPengguna.length;
+
+    if (daftarPengguna.length === 0) {
+        wadah.innerHTML = `
+            <tr>
+                <td colspan="5" class="kosong">
+                    <i class="fa-solid fa-users"></i>
+                    <p>Belum ada pengguna terdaftar.<br>Silakan tambahkan pengguna menggunakan formulir di atas.</p>
+                </td>
+            </tr>
+        `;
+        return;
+    }
+
+    wadah.innerHTML = "";
+    daftarPengguna.forEach((p, i) => {
+        const baris = document.createElement('tr');
+        baris.innerHTML = `
+            <td>${i + 1}</td>
+            <td><strong>${p.nama}</strong></td>
+            <td>${p.kelas}</td>
+            <td><code style="background:#f1f5f9; padding:2px 8px; border-radius:4px;">${p.username}</code></td>
+            <td>
+                <button class="tombol-aksi edit" onclick="editPengguna(${i})">
+                    <i class="fa-solid fa-pen-to-square"></i> Edit
+                </button>
+                <button class="tombol-aksi hapus" onclick="hapusPengguna(${i})">
+                    <i class="fa-solid fa-trash"></i> Hapus
+                </button>
+            </td>
+        `;
+        wadah.appendChild(baris);
+    });
+}
+
+// ==================== PESAN NOTIFIKASI ====================
+function tampilkanPesan(teks, jenis) {
+    const kotak = document.getElementById('pesanNotif');
+    kotak.className = "pesan " + (jenis === "sukses" ? "pesan-sukses" : "pesan-bahaya");
+    kotak.textContent = teks;
+    setTimeout(() => sembunyikanPesan(), 4000);
+}
+
+function sembunyikanPesan() {
+    document.getElementById('pesanNotif').style.display = "none";
+}
+</script>
+
+</body>
+</html>
