@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login Peserta — Ujian CBT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --utama: #7c3aed;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --batas: #e2e8f0;
+            --bahaya: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #7c3aed, #6d28d9);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .kotak-login {
+            background: white;
+            border-radius: 20px;
+            padding: 36px 32px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.15);
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .kotak-login h2 {
+            text-align: center;
+            color: var(--utama);
+            margin-bottom: 24px;
+            font-size: 22px;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo i {
+            font-size: 48px;
+            color: var(--utama);
+        }
+
+        .grup-input {
+            margin-bottom: 16px;
+        }
+
+        .grup-input label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--gelap);
+            font-size: 14px;
+        }
+
+        input {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 15px;
+            border: 2px solid var(--batas);
+            border-radius: 10px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+        }
+
+        input:focus {
+            border-color: var(--utama);
+            box-shadow: 0 0 0 3px rgba(124, 58, 237, 0.1);
+        }
+
+        .tombol-masuk {
+            width: 100%;
+            background: var(--utama);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: all 0.2s;
+        }
+
+        .tombol-masuk:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+        }
+
+        .pesan {
+            padding: 12px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .pesan-bahaya { background: #fee2e2; color: #dc2626; display: block; }
+
+        .kembali {
+            text-align: center;
+            margin-top: 16px;
+        }
+
+        .kembali a {
+            color: var(--abu);
+            font-size: 14px;
+            text-decoration: none;
+        }
+
+        .kembali a:hover {
+            color: var(--utama);
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+
+<div class="kotak-login">
+    <div class="logo"><i class="fa-solid fa-user-graduate"></i></div>
+    <h2>Login Peserta Ujian</h2>
+    <div id="pesanNotif" class="pesan"></div>
+
+    <form onsubmit="return prosesLogin(event)">
+        <div class="grup-input">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Masukkan username Anda" required>
+        </div>
+
+        <div class="grup-input">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Masukkan password Anda" required>
+        </div>
+
+        <button type="submit" class="tombol-masuk">
+            <i class="fa-solid fa-right-to-bracket"></i> Masuk
+        </button>
+    </form>
+
+    <div class="kembali">
+        <a href="../index.html">← Kembali ke Beranda</a>
+    </div>
+</div>
+
+<script>
+function prosesLogin(event) {
+    event.preventDefault();
+    const username = document.getElementById('username').value.trim();
+    const password = document.getElementById('password').value;
+
+    // Ambil daftar pengguna dari admin-pengguna.html
+    const daftarPengguna = JSON.parse(localStorage.getItem('daftarPenggunaCBT') || '[]');
+
+    // Cek kecocokan username & password
+    const pengguna = daftarPengguna.find(p =>
+        p.username === username && p.password === password
+    );
+
+    if (pengguna) {
+        // Simpan status login peserta
+        localStorage.setItem('pesertaCBT', JSON.stringify({
+            nama: pengguna.nama,
+            kelas: pengguna.kelas,
+            username: pengguna.username,
+            masuk: true
+        }));
+
+        tampilkanPesan("✅ Login berhasil! Mengalihkan ke halaman ujian...", "sukses");
+        setTimeout(() => {
+            window.location.href = "ujian.html";
+        }, 1200);
+    } else {
+        tampilkanPesan("❌ Username atau password salah!\nPastikan sudah terdaftar oleh Admin.", "bahaya");
+    }
+
+    return false;
+}
+
+function tampilkanPesan(teks, jenis) {
+    const kotak = document.getElementById('pesanNotif');
+    kotak.className = "pesan " + (jenis === "sukses" ? "pesan-sukses" : "pesan-bahaya");
+    kotak.innerHTML = teks.replace(/\n/g, '<br>');
+}
+</script>
+
+</body>
+</html>
