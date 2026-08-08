@@ -230,13 +230,17 @@
             margin-bottom: 20px;
         }
 
+        /* === GAMBAR SOAL === */
         .gambar-soal {
             max-width: 100%;
-            max-height: 300px;
+            max-height: 350px;
             object-fit: contain;
-            border-radius: 10px;
+            border-radius: 12px;
             margin-bottom: 20px;
             border: 1px solid var(--batas);
+            display: block;
+            margin-left: auto;
+            margin-right: auto;
         }
 
         .daftar-pilihan {
@@ -424,6 +428,8 @@
             </div>
 
             <div class="teks-soal" id="teksSoal"></div>
+
+            <!-- === GAMBAR SOAL: TAMPIL JIKA ADA, SEMBUNYI JIKA TIDAK ADA === -->
             <img id="gambarSoal" class="gambar-soal sembunyi" alt="Gambar Soal">
 
             <div class="daftar-pilihan" id="wadahPilihan"></div>
@@ -450,7 +456,7 @@
         <i class="fa-solid fa-lock"></i>
         <h3>Anda belum login</h3>
         <p style="color:#64748b; margin:10px 0 20px;">Silakan login terlebih dahulu untuk mengakses halaman ujian.</p>
-        <a href="login.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Peserta</a>
+        <a href="login-peserta.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Peserta</a>
     </div>
 </div>
 
@@ -468,7 +474,7 @@ let jumlahBenar = 0;
 let nilaiAkhir = 0;
 let dataPeserta = null;
 
-// ⏱️ WAKTU UJIAN DIATUR OLEH ADMIN (menit)
+// ⏱️ AMBIL WAKTU DARI HALAMAN PENGATURAN
 const pengaturan = JSON.parse(localStorage.getItem('pengaturanCBT') || '{}');
 const WAKTU_UJIAN_ADMIN = pengaturan.waktuUjian || 60;
 
@@ -531,9 +537,6 @@ function mulaiUjian() {
     nomorSekarang = 0;
     sisaWaktuDetik = WAKTU_UJIAN_ADMIN * 60;
 
-    // Tampilkan info mapel yang sedang diujikan
-    console.log(`✅ Memuat ${daftarSoal.length} soal dari mapel: ${mapel}`);
-
     // Tampilkan area ujian
     document.getElementById('halamanMulai').classList.add('sembunyi');
     document.getElementById('areaUjian').classList.remove('area-ujian');
@@ -574,7 +577,7 @@ function mulaiHitungWaktu() {
 }
 
 // ======================================
-// TAMPILKAN SOAL
+// TAMPILKAN SOAL + GAMBAR JIKA ADA
 // ======================================
 function tampilkanSoal() {
     const soal = daftarSoal[nomorSekarang];
@@ -582,13 +585,24 @@ function tampilkanSoal() {
     document.getElementById('teksSoal').textContent = soal.soal;
     document.getElementById('labelMapel').textContent = soal.mapel || "Lainnya";
 
-    if (soal.gambar) {
-        document.getElementById('gambarSoal').src = soal.gambar;
-        document.getElementById('gambarSoal').classList.remove('sembunyi');
+    // ==================================================
+    // ✅ LOGIKA GAMBAR SOAL: TAMPIL JIKA ADA, SEMBUNYI JIKA TIDAK ADA
+    // ==================================================
+    const elemenGambar = document.getElementById('gambarSoal');
+    
+    // Cek apakah soal memiliki gambar/foto
+    if (soal.gambar && soal.gambar.trim() !== '') {
+        // Ada gambar → tampilkan
+        elemenGambar.src = soal.gambar;
+        elemenGambar.alt = "Gambar Soal Nomor " + (nomorSekarang + 1);
+        elemenGambar.classList.remove('sembunyi');
     } else {
-        document.getElementById('gambarSoal').classList.add('sembunyi');
+        // Tidak ada gambar → sembunyikan elemen gambar
+        elemenGambar.src = "";
+        elemenGambar.classList.add('sembunyi');
     }
 
+    // Tampilkan pilihan jawaban
     const wadah = document.getElementById('wadahPilihan');
     wadah.innerHTML = "";
     const huruf = ['A', 'B', 'C', 'D', 'E'];
@@ -601,6 +615,7 @@ function tampilkanSoal() {
         wadah.appendChild(div);
     });
 
+    // Atur tombol navigasi
     document.getElementById('tombolSebelum').disabled = nomorSekarang === 0;
     if (nomorSekarang === daftarSoal.length - 1) {
         document.getElementById('tombolSelanjutnya').classList.add('sembunyi');
@@ -670,9 +685,10 @@ function perbaruiTombolNomor() {
 // ======================================
 function konfirmasiSelesai() {
     const sudahDijawab = Object.keys(jawabanPengguna).length;
+    const mapelDipilih = document.getElementById('pilihMapel').value;
     const pesan = sudahDijawab < daftarSoal.length
-        ? `Anda menjawab ${sudahDijawab} dari ${daftarSoal.length} soal (${document.getElementById('pilihMapel').value}).\nYakin ingin mengumpulkan ujian?`
-        : `Anda menjawab semua ${daftarSoal.length} soal (${document.getElementById('pilihMapel').value}).\nYakin ingin mengumpulkan ujian?`;
+        ? `Anda menjawab ${sudahDijawab} dari ${daftarSoal.length} soal (${mapelDipilih}).\nYakin ingin mengumpulkan ujian?`
+        : `Anda menjawab semua ${daftarSoal.length} soal (${mapelDipilih}).\nYakin ingin mengumpulkan ujian?`;
 
     if (confirm(pesan)) {
         kirimUjian();
