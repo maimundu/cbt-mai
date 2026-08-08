@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Ujian - Sistem CBT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --utama: #2563eb;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --benar: #10b981;
+            --salah: #ef4444;
+            --peringatan: #f59e0b;
+            --latar: #f8fafc;
+            --kartu: #ffffff;
+            --batas: #e2e8f0;
+        }
+
+        * {
+            margin: 0; padding: 0; box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+            min-height: 100vh;
+            padding: 30px 15px;
+        }
+
+        .wadah {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .kepala {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .kepala h1 {
+            color: var(--gelap);
+            font-size: 28px;
+            font-weight: 700;
+        }
+
+        .kartu-nilai {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+            padding: 36px;
+            border-radius: 24px;
+            text-align: center;
+            margin-bottom: 28px;
+            box-shadow: 0 12px 32px rgba(16,185,129,0.25);
+            animation: naik 0.6s ease;
+        }
+
+        @keyframes naik {
+            dari { opacity:0; transform:translateY(24px); }
+            ke { opacity:1; transform:translateY(0); }
+        }
+
+        .nilai-angka {
+            font-size: 72px;
+            font-weight: 800;
+            line-height: 1;
+            margin: 12px 0;
+        }
+
+        .keterangan {
+            font-size: 18px;
+            opacity: 0.92;
+        }
+
+        .ringkasan {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 28px;
+        }
+
+        @media (max-width: 600px) {
+            .ringkasan { grid-template-columns: repeat(2, 1fr); }
+        }
+
+        .kotak-ringkasan {
+            background: white;
+            padding: 20px 12px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+        }
+
+        .kotak-ringkasan .angka {
+            font-size: 32px;
+            font-weight: 700;
+            display: block;
+        }
+
+        .t-soal { color: var(--utama); }
+        .t-benar { color: var(--benar); }
+        .t-salah { color: var(--salah); }
+        .t-kosong { color: var(--peringatan); }
+
+        .kartu-tabel {
+            background: white;
+            border-radius: 20px;
+            padding: 28px;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.06);
+            margin-bottom: 28px;
+        }
+
+        .kartu-tabel h3 {
+            color: var(--gelap);
+            margin-bottom: 20px;
+            font-size: 18px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th {
+            background: var(--utama);
+            color: white;
+            padding: 14px 10px;
+            text-align: center;
+        }
+
+        th:first-child { border-radius: 10px 0 0 0; }
+        th:last-child { border-radius: 0 10px 0 0; }
+
+        td {
+            padding: 14px 10px;
+            text-align: center;
+            border-bottom: 1px solid #f1f5f9;
+        }
+
+        .baris-benar { background: #f0fdf4; }
+        .baris-salah { background: #fef2f2; }
+
+        .status-benar { color: var(--benar); font-weight: 600; }
+        .status-salah { color: var(--salah); font-weight: 600; }
+
+        .tombol-bawah {
+            display: flex;
+            gap: 14px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .tombol {
+            padding: 14px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border: none;
+            border-radius: 12px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .tombol:hover { transform: translateY(-2px); box-shadow: 0 6px 16px rgba(0,0,0,0.12); }
+        .btn-ujian { background: var(--utama); color: white; }
+        .btn-beranda { background: var(--abu); color: white; }
+
+        .kosong { color: #94a3b8; font-style: italic; }
+    </style>
+</head>
+<body>
+
+<div class="wadah">
+    <div class="kepala">
+        <h1><i class="fa-solid fa-chart-pie"></i> Hasil Ujian</h1>
+    </div>
+
+    <div class="kartu-nilai">
+        <div>🎉 Nilai Akhir Anda</div>
+        <div class="nilai-angka" id="nilaiAkhir">0</div>
+        <div class="keterangan" id="keterangan"></div>
+    </div>
+
+    <div class="ringkasan">
+        <div class="kotak-ringkasan">
+            <span class="angka t-soal" id="jmlSoal">0</span>
+            <span>Jumlah Soal</span>
+        </div>
+        <div class="kotak-ringkasan">
+            <span class="angka t-benar" id="jmlBenar">0</span>
+            <span>Jawaban Benar</span>
+        </div>
+        <div class="kotak-ringkasan">
+            <span class="angka t-salah" id="jmlSalah">0</span>
+            <span>Jawaban Salah</span>
+        </div>
+        <div class="kotak-ringkasan">
+            <span class="angka t-kosong" id="jmlKosong">0</span>
+            <span>Tidak Dijawab</span>
+        </div>
+    </div>
+
+    <div class="kartu-tabel">
+        <h3><i class="fa-solid fa-list-check"></i> Rincian Jawaban</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>No.</th>
+                    <th>Jawaban Anda</th>
+                    <th>Kunci Jawaban</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody id="isiTabel"></tbody>
+        </table>
+    </div>
+
+    <div class="tombol-bawah">
+        <a href="ujian.html" class="tombol btn-ujian"><i class="fa-solid fa-rotate-right"></i> Ulangi Ujian</a>
+        <a href="../index.html" class="tombol btn-beranda"><i class="fa-solid fa-house"></i> Kembali ke Beranda</a>
+    </div>
+</div>
+
+<script>
+const data = JSON.parse(localStorage.getItem('hasilUjian') || 'null');
+window.onload = function() {
+    if (!data || !data.rincian) {
+        alert("⚠️ Tidak ada data hasil ujian!");
+        window.location.href = "ujian.html";
+        return;
+    }
+    tampilkan();
+};
+
+function tampilkan() {
+    document.getElementById('nilaiAkhir').textContent = data.nilai + " / 100";
+    let ket = "";
+    if (data.nilai >= 85) ket = "🌟 Luar biasa! Pertahankan prestasi Anda!";
+    else if (data.nilai >= 70) ket = "✅ Bagus! Tingkatkan lagi kemampuan Anda";
+    else if (data.nilai >= 55) ket = "⚠️ Cukup, pelajari kembali materi yang belum paham";
+    else { ket = "💪 Belum lulus, jangan menyerah! Pelajari lagi dan coba lagi"; document.querySelector('.kartu-nilai').style.background = "linear-gradient(135deg, #f59e0b, #d97706)"; }
+    document.getElementById('keterangan').textContent = ket;
+
+    let benar=0, salah=0, kosong=0;
+    const tabel = document.getElementById('isiTabel');
+    tabel.innerHTML = "";
+    data.rincian.forEach(item => {
+        const tr = document.createElement('tr');
+        if (item.status === "✅ Benar") { benar++; tr.className = "baris-benar"; }
+        else if (item.jawabanPengguna === "Tidak dijawab") { kosong++; tr.className = ""; }
+        else { salah++; tr.className = "baris-salah"; }
+        tr.innerHTML = `
+            <td>${item.nomor}</td>
+            <td class="${item.jawabanPengguna==='Tidak dijawab'?'kosong':''}">${item.jawabanPengguna}</td>
+            <td>${item.jawabanBenar}</td>
+            <td class="${item.status.includes('Benar')?'status-benar':'status-salah'}">${item.status}</td>
+        `;
+        tabel.appendChild(tr);
+    });
+
+    document.getElementById('jmlSoal').textContent = data.rincian.length;
+    document.getElementById('jmlBenar').textContent = benar;
+    document.getElementById('jmlSalah').textContent = salah;
+    document.getElementById('jmlKosong').textContent = kosong;
+}
+</script>
+</body>
+</html>
