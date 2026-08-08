@@ -226,46 +226,80 @@
 </div>
 
 <script>
-const data = JSON.parse(localStorage.getItem('hasilUjian') || 'null');
-window.onload = function() {
-    if (!data || !data.rincian) {
-        alert("⚠️ Tidak ada data hasil ujian!");
-        window.location.href = "ujian.html";
-        return;
-    }
-    tampilkan();
+// ==========================================================
+// ✅ GANTI URL INI DENGAN URL MILIK ANDA DARI APPS SCRIPT
+// ==========================================================
+const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzXXXXXX/exec";
+
+// ==========================================================
+// 🔧 FUNGSI BANTUAN: BACA DATA DARI GOOGLE SHEETS
+// ==========================================================
+async function bacaData(aksi, param = {}) {
+  const p = new URLSearchParams({ action: aksi, ...param });
+  const res = await fetch(`${URL_GOOGLE_SHEETS}?${p}`);
+  return await res.json();
+}
+
+// ======================================
+// ✅ BACA HASIL TERBARU DARI GOOGLE SHEETS
+// ======================================
+window.onload = async function() {
+  // Cek apakah peserta sudah login
+  const simpanPeserta = localStorage.getItem('pesertaCBT');
+  if (!simpanPeserta) {
+    window.location.href = "login-peserta.html";
+    return;
+  }
+  const dataPeserta = JSON.parse(simpanPeserta);
+
+  // ✅ BACA SEMUA HASIL DARI GOOGLE SHEETS
+  const res = await bacaData('bacaHasil');
+  const semuaHasil = res.data || [];
+
+  if (semuaHasil.length === 0) {
+    document.getElementById('kontenHasil').innerHTML = `
+      <div style="text-align:center; padding:40px;">
+        <i class="fa-solid fa-circle-info" style="font-size:48px; color:#94a3b8;"></i>
+        <h3 style="margin:16px 0;">Belum Ada Hasil</h3>
+        <p style="color:#64748b;">Silakan ikuti ujian terlebih dahulu.</p>
+        <a href="ujian.html" style="display:inline-block; margin-top:16px; padding:10px 20px; background:#7c3aed; color:white; border-radius:8px; text-decoration:none;">Mulai Ujian</a>
+      </div>
+    `;
+    return;
+  }
+
+  // ✅ AMBIL HASIL TERBARU (baris paling bawah)
+  const terbaru = semuaHasil[semuaHasil.length - 1];
+
+  // Isi data ke halaman
+  document.getElementById('namaPeserta').textContent = terbaru[0] || dataPeserta.nama;
+  document.getElementById('kelasPeserta').textContent = terbaru[1] || dataPeserta.kelas;
+  document.getElementById('mapelUjian').textContent = terbaru[2] || "-";
+  document.getElementById('totalSoal').textContent = terbaru[3] || 0;
+  document.getElementById('jumlahBenar').textContent = terbaru[4] || 0;
+  document.getElementById('jumlahSalah').textContent = terbaru[5] || 0;
+
+  // Tampilkan nilai akhir dengan warna
+  const nilai = terbaru[6] || 0;
+  const elemenNilai = document.getElementById('nilaiAkhir');
+  elemenNilai.textContent = nilai;
+  if (nilai >= 80) elemenNilai.style.color = "#10b981"; // Hijau
+  else if (nilai >= 60) elemenNilai.style.color = "#f59e0b"; // Kuning
+  else elemenNilai.style.color = "#ef4444"; // Merah
+
+  document.getElementById('waktuUjian').textContent = terbaru[7] || "-";
 };
 
-function tampilkan() {
-    document.getElementById('nilaiAkhir').textContent = data.nilai + " / 100";
-    let ket = "";
-    if (data.nilai >= 85) ket = "🌟 Luar biasa! Pertahankan prestasi Anda!";
-    else if (data.nilai >= 70) ket = "✅ Bagus! Tingkatkan lagi kemampuan Anda";
-    else if (data.nilai >= 55) ket = "⚠️ Cukup, pelajari kembali materi yang belum paham";
-    else { ket = "💪 Belum lulus, jangan menyerah! Pelajari lagi dan coba lagi"; document.querySelector('.kartu-nilai').style.background = "linear-gradient(135deg, #f59e0b, #d97706)"; }
-    document.getElementById('keterangan').textContent = ket;
+// ======================================
+// TOMBOL KEMBALI / LOGOUT
+// ======================================
+function kembaliBeranda() {
+  localStorage.removeItem('pesertaCBT');
+  window.location.href = "login-peserta.html";
+}
 
-    let benar=0, salah=0, kosong=0;
-    const tabel = document.getElementById('isiTabel');
-    tabel.innerHTML = "";
-    data.rincian.forEach(item => {
-        const tr = document.createElement('tr');
-        if (item.status === "✅ Benar") { benar++; tr.className = "baris-benar"; }
-        else if (item.jawabanPengguna === "Tidak dijawab") { kosong++; tr.className = ""; }
-        else { salah++; tr.className = "baris-salah"; }
-        tr.innerHTML = `
-            <td>${item.nomor}</td>
-            <td class="${item.jawabanPengguna==='Tidak dijawab'?'kosong':''}">${item.jawabanPengguna}</td>
-            <td>${item.jawabanBenar}</td>
-            <td class="${item.status.includes('Benar')?'status-benar':'status-salah'}">${item.status}</td>
-        `;
-        tabel.appendChild(tr);
-    });
-
-    document.getElementById('jmlSoal').textContent = data.rincian.length;
-    document.getElementById('jmlBenar').textContent = benar;
-    document.getElementById('jmlSalah').textContent = salah;
-    document.getElementById('jmlKosong').textContent = kosong;
+function ujianLagi() {
+  window.location.href = "ujian.html";
 }
 </script>
 </body>
