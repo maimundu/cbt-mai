@@ -461,286 +461,264 @@
 </div>
 
 <script>
+// ==========================================================
+// ✅ GANTI URL INI DENGAN URL MILIK ANDA DARI APPS SCRIPT
+// ==========================================================
+const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbyLyGbcILAE5qqTzdDpfvjdwiQnkieGJOT3uY0wwruM_OL8PqCU63crZEg-a6QNYadW/exec";
+
+// ==========================================================
+// 🔧 FUNGSI BANTUAN: BACA & KIRIM DATA KE GOOGLE SHEETS
+// ==========================================================
+async function bacaData(aksi, param = {}) {
+  const p = new URLSearchParams({ action: aksi, ...param });
+  const res = await fetch(`${URL_GOOGLE_SHEETS}?${p}`);
+  return await res.json();
+}
+
+async function kirimData(aksi, obj) {
+  const p = new URLSearchParams({ action: aksi, data: JSON.stringify(obj) });
+  const res = await fetch(`${URL_GOOGLE_SHEETS}?${p}`);
+  return await res.json();
+}
+
 // ======================================
 // VARIABEL GLOBAL
 // ======================================
-let daftarSoal = [];
 let soalTerpilih = [];
-let jawabanPengguna = {};
-let nomorSekarang = 0;
-let sisaWaktuDetik = 0;
-let penghitungWaktu;
-let jumlahBenar = 0;
-let nilaiAkhir = 0;
-let dataPeserta = null;
-
-// ⏱️ AMBIL WAKTU DARI HALAMAN PENGATURAN
-const pengaturan = JSON.parse(localStorage.getItem('pengaturanCBT') || '{}');
-const WAKTU_UJIAN_ADMIN = pengaturan.waktuUjian || 60;
+let indeksSaatIni = 0;
+let jawabanDipilih = {};
+let sisaWaktu = 0;
+let pengaturan = {};
+let dataPeserta = {};
+let mapelDipilih = "";
+let pengaturWaktu;
 
 // ======================================
-// CEK LOGIN & TAMPILKAN INFO
+// CEK PESERTA & MUAT DATA SAAT BUKA
 // ======================================
-window.onload = function() {
-    cekLoginDanMuat();
+window.onload = async function() {
+  // Cek login peserta
+  const simpanPeserta = localStorage.getItem('pesertaCBT');
+  if (!simpanPeserta) {
+    window.location.href = "login-peserta.html";
+    return;
+  }
+  dataPeserta = JSON.parse(simpanPeserta);
+  document.getElementById('namaPeserta').textContent = dataPeserta.nama;
+  document.getElementById('kelasPeserta').textContent = dataPeserta.kelas;
+
+  // Muat pengaturan dari Google Sheets
+  const resPengaturan = await bacaData('bacaPengaturan');
+  pengaturan = resPengaturan.data || { waktuUjian: 60, nilaiLulus: 70 };
+
+  // Muat daftar mata pelajaran untuk pilihan
+  muatDaftarMapel();
 };
 
-function cekLoginDanMuat() {
-    dataPeserta = JSON.parse(localStorage.getItem('pesertaCBT') || 'null');
-
-    if (!dataPeserta || !dataPeserta.masuk) {
-        document.getElementById('halamanMulai').classList.add('sembunyi');
-        document.getElementById('blokBelumLogin').classList.remove('sembunyi');
-        return;
-    }
-
-    // Tampilkan info peserta (hanya tampilan, tidak bisa diubah)
-    document.getElementById('tampilNama').textContent = dataPeserta.nama;
-    document.getElementById('tampilKelas').textContent = dataPeserta.kelas || '-';
-    document.getElementById('tampilWaktu').textContent = WAKTU_UJIAN_ADMIN + ' Menit';
-    document.getElementById('infoPesertaNav').textContent = dataPeserta.nama;
-
-    localStorage.setItem('namaPenggunaCBT', dataPeserta.nama);
+// ======================================
+// 📋 MUAT DAFTAR MATA PELAJARAN
+// ======================================
+async function muatDaftarMapel() {
+  const res = await bacaData('bacaSoal');
+  const semuaSoal = res.data || [];
+  
+  // Ambil daftar mapel unik
+  const mapelUnik = [...new Set(semuaSoal.map(s => s.mapel))];
+  const pilih = document.getElementById('pilihMapel');
+  pilih.innerHTML = '<option value="">— Pilih Mata Pelajaran —</option>';
+  
+  mapelUnik.forEach(m => {
+    const opsi = document.createElement('option');
+    opsi.value = m;
+    opsi.textContent = m;
+    pilih.appendChild(opsi);
+  });
 }
 
 // ======================================
-// MULAI UJIAN DENGAN FILTER MAPEL
+// ✅ MULAI UJIAN — AMBIL SOAL DARI GOOGLE SHEETS
 // ======================================
-function mulaiUjian() {
-    const mapel = document.getElementById('pilihMapel').value;
+async function mulaiUjian() {
+  mapelDipilih = document.getElementById('pilihMapel').value;
+  if (!mapelDipilih) {
+    alert("Silakan pilih Mata Pelajaran terlebih dahulu!");
+    return;
+  }
 
-    // Validasi: wajib pilih mapel
-    if (!mapel) {
-        alert("⚠️ Silakan pilih mata pelajaran terlebih dahulu!");
-        document.getElementById('pilihMapel').focus();
-        return;
-    }
+  // ✅ BACA SOAL LANGSUNG DARI GOOGLE SHEETS
+  const res = await bacaData('bacaSoal');
+  const semuaSoal = res.data || [];
+  soalTerpilih = semuaSoal.filter(s => s.mapel === mapelDipilih);
 
-    // Ambil SEMUA soal dari penyimpanan
-    const semuaSoal = JSON.parse(localStorage.getItem('bankSoalCBT') || '[]');
-    if (semuaSoal.length === 0) {
-        alert("⚠️ Belum ada soal yang tersedia! Hubungi admin untuk menambahkan soal terlebih dahulu.");
-        return;
-    }
+  if (soalTerpilih.length === 0) {
+    alert("⚠️ Belum ada soal untuk mata pelajaran ini!");
+    return;
+  }
 
-    // 🔍 FILTER KETAT: HANYA AMBIL SOAL SESUAI MAPEL YANG DIPILIH
-    soalTerpilih = semuaSoal.filter(s => s.mapel === mapel);
+  // Sembunyikan pemilihan mapel, tampilkan ujian
+  document.getElementById('pilihanMapel').classList.add('sembunyi');
+  document.getElementById('bagianUjian').classList.remove('sembunyi');
 
-    if (soalTerpilih.length === 0) {
-        alert(`⚠️ Belum ada soal untuk mata pelajaran: ${mapel}\nHubungi admin untuk menambahkan soal terlebih dahulu.`);
-        return;
-    }
-
-    // ✅ Yang muncul HANYA soal mapel yang dipilih
-    daftarSoal = soalTerpilih;
-    jawabanPengguna = {};
-    nomorSekarang = 0;
-    sisaWaktuDetik = WAKTU_UJIAN_ADMIN * 60;
-
-    // Tampilkan area ujian
-    document.getElementById('halamanMulai').classList.add('sembunyi');
-    document.getElementById('areaUjian').classList.remove('area-ujian');
-    document.getElementById('areaUjian').style.display = 'block';
-    document.getElementById('jumlahSoal').textContent = daftarSoal.length;
-    document.getElementById('tombolAkhir').classList.remove('sembunyi');
-
-    buatTombolNavigasi();
-    tampilkanSoal();
-    mulaiHitungWaktu();
+  // Mulai tampilkan soal pertama & hitung mundur
+  sisaWaktu = (pengaturan.waktuUjian || 60) * 60;
+  indeksSaatIni = 0;
+  jawabanDipilih = {};
+  tampilkanSoal();
+  mulaiHitungMundur();
+  buatNavigasiNomor();
 }
 
 // ======================================
-// PENGHITUNG WAKTU
-// ======================================
-function mulaiHitungWaktu() {
-    penghitungWaktu = setInterval(() => {
-        sisaWaktuDetik--;
-        const jam = Math.floor(sisaWaktuDetik / 3600);
-        const menit = Math.floor((sisaWaktuDetik % 3600) / 60);
-        const detik = sisaWaktuDetik % 60;
-        document.getElementById('kotakWaktu').textContent =
-            `⏱️ ${String(jam).padStart(2,'0')}:${String(menit).padStart(2,'0')}:${String(detik).padStart(2,'0')}`;
-
-        // Peringatan 5 menit terakhir
-        if (sisaWaktuDetik === 300) {
-            document.getElementById('peringatanWaktu').style.display = 'block';
-            document.getElementById('kotakWaktu').classList.add('habis');
-        }
-
-        // Waktu habis → kirim otomatis
-        if (sisaWaktuDetik <= 0) {
-            clearInterval(penghitungWaktu);
-            alert("⏰ Waktu habis! Jawaban akan dikirim otomatis.");
-            kirimUjian();
-        }
-    }, 1000);
-}
-
-// ======================================
-// TAMPILKAN SOAL + GAMBAR JIKA ADA
+// TAMPILKAN SOAL SAAT INI
 // ======================================
 function tampilkanSoal() {
-    const soal = daftarSoal[nomorSekarang];
-    document.getElementById('nomorSaatIni').textContent = nomorSekarang + 1;
-    document.getElementById('teksSoal').textContent = soal.soal;
-    document.getElementById('labelMapel').textContent = soal.mapel || "Lainnya";
+  const soal = soalTerpilih[indeksSaatIni];
+  document.getElementById('nomorSoal').textContent = `Soal ${indeksSaatIni + 1} dari ${soalTerpilih.length}`;
+  document.getElementById('teksSoal').textContent = soal.soal;
 
-    // ==================================================
-    // ✅ LOGIKA GAMBAR SOAL: TAMPIL JIKA ADA, SEMBUNYI JIKA TIDAK ADA
-    // ==================================================
-    const elemenGambar = document.getElementById('gambarSoal');
-    
-    // Cek apakah soal memiliki gambar/foto
-    if (soal.gambar && soal.gambar.trim() !== '') {
-        // Ada gambar → tampilkan
-        elemenGambar.src = soal.gambar;
-        elemenGambar.alt = "Gambar Soal Nomor " + (nomorSekarang + 1);
-        elemenGambar.classList.remove('sembunyi');
-    } else {
-        // Tidak ada gambar → sembunyikan elemen gambar
-        elemenGambar.src = "";
-        elemenGambar.classList.add('sembunyi');
-    }
+  // Tampilkan / sembunyikan gambar soal
+  const kotakGambar = document.getElementById('bagianGambarSoal');
+  const elemenGambar = document.getElementById('gambarSoal');
+  if (soal.gambar && soal.gambar !== "") {
+    elemenGambar.src = soal.gambar;
+    kotakGambar.classList.remove('sembunyi');
+  } else {
+    kotakGambar.classList.add('sembunyi');
+  }
 
-    // Tampilkan pilihan jawaban
-    const wadah = document.getElementById('wadahPilihan');
-    wadah.innerHTML = "";
-    const huruf = ['A', 'B', 'C', 'D', 'E'];
-    soal.pilihan.forEach((teks, idx) => {
-        const dipilih = jawabanPengguna[nomorSekarang] === idx ? "terpilih" : "";
-        const div = document.createElement('div');
-        div.className = `pilihan ${dipilih}`;
-        div.innerHTML = `<span>${huruf[idx]}.</span> ${teks}`;
-        div.onclick = () => pilihJawaban(idx);
-        wadah.appendChild(div);
-    });
+  // Tampilkan pilihan jawaban
+  const wadahPilihan = document.getElementById('pilihanJawaban');
+  wadahPilihan.innerHTML = "";
+  const labelPilihan = ['A', 'B', 'C', 'D', 'E'];
 
-    // Atur tombol navigasi
-    document.getElementById('tombolSebelum').disabled = nomorSekarang === 0;
-    if (nomorSekarang === daftarSoal.length - 1) {
-        document.getElementById('tombolSelanjutnya').classList.add('sembunyi');
-        document.getElementById('tombolKirim').classList.remove('sembunyi');
-    } else {
-        document.getElementById('tombolSelanjutnya').classList.remove('sembunyi');
-        document.getElementById('tombolKirim').classList.add('sembunyi');
-    }
+  soal.pilihan.forEach((pilihan, idx) => {
+    const dipilih = jawabanDipilih[indeksSaatIni] === idx ? 'checked' : '';
+    const div = document.createElement('label');
+    div.className = "pilihan";
+    div.innerHTML = `
+      <input type="radio" name="jawaban" value="${idx}" ${dipilih} onchange="pilihJawaban(${idx})">
+      ${labelPilihan[idx]}. ${pilihan}
+    `;
+    wadahPilihan.appendChild(div);
+  });
 
-    perbaruiTombolNomor();
+  tandaiNomorDijawab();
 }
 
 // ======================================
-// PILIH JAWABAN
+// PILIH JAWABAN & NAVIGASI
 // ======================================
-function pilihJawaban(indeks) {
-    jawabanPengguna[nomorSekarang] = indeks;
-    tampilkanSoal();
-}
-
-// ======================================
-// NAVIGASI SOAL
-// ======================================
-function soalSebelumnya() {
-    if (nomorSekarang > 0) {
-        nomorSekarang--;
-        tampilkanSoal();
-    }
+function pilihJawaban(idx) {
+  jawabanDipilih[indeksSaatIni] = idx;
+  tandaiNomorDijawab();
 }
 
 function soalBerikutnya() {
-    if (nomorSekarang < daftarSoal.length - 1) {
-        nomorSekarang++;
-        tampilkanSoal();
+  if (indeksSaatIni < soalTerpilih.length - 1) {
+    indeksSaatIni++;
+    tampilkanSoal();
+  }
+}
+
+function soalSebelumnya() {
+  if (indeksSaatIni > 0) {
+    indeksSaatIni--;
+    tampilkanSoal();
+  }
+}
+
+function bukaSoalNomor(no) {
+  indeksSaatIni = no - 1;
+  tampilkanSoal();
+}
+
+// ======================================
+// HITUNG MUNDUR WAKTU
+// ======================================
+function mulaiHitungMundur() {
+  pengaturWaktu = setInterval(() => {
+    sisaWaktu--;
+    const m = Math.floor(sisaWaktu / 60);
+    const d = sisaWaktu % 60;
+    document.getElementById('sisaWaktu').textContent = 
+      `${m.toString().padStart(2,'0')}:${d.toString().padStart(2,'0')}`;
+
+    if (sisaWaktu <= 0) {
+      clearInterval(pengaturWaktu);
+      alert("⏰ Waktu habis! Jawaban akan dikirim otomatis.");
+      kirimUjian();
     }
+  }, 1000);
 }
 
 // ======================================
-// TOMBOL NAVIGASI NOMOR
+// ✅ KIRIM HASIL KE GOOGLE SHEETS
 // ======================================
-function buatTombolNavigasi() {
-    const wadah = document.getElementById('kotakNomor');
-    wadah.innerHTML = "";
-    for (let i = 0; i < daftarSoal.length; i++) {
-        const btn = document.createElement('button');
-        btn.className = "tombol-nomor";
-        btn.textContent = i + 1;
-        btn.onclick = () => {
-            nomorSekarang = i;
-            tampilkanSoal();
-        };
-        wadah.appendChild(btn);
-    }
-}
+async function kirimUjian() {
+  clearInterval(pengaturWaktu);
 
-function perbaruiTombolNomor() {
-    const tombol = document.querySelectorAll('.tombol-nomor');
-    tombol.forEach((btn, i) => {
-        btn.classList.remove('aktif', 'sudah');
-        if (i === nomorSekarang) btn.classList.add('aktif');
-        else if (jawabanPengguna[i] !== undefined) btn.classList.add('sudah');
-    });
-}
+  // Hitung jumlah benar & nilai
+  let jumlahBenar = 0;
+  const daftarSoal = soalTerpilih;
+  daftarSoal.forEach((soal, idx) => {
+    if (jawabanDipilih[idx] === soal.jawabanBenar) jumlahBenar++;
+  });
 
-// ======================================
-// KONFIRMASI & KIRIM UJIAN
-// ======================================
-function konfirmasiSelesai() {
-    const sudahDijawab = Object.keys(jawabanPengguna).length;
-    const mapelDipilih = document.getElementById('pilihMapel').value;
-    const pesan = sudahDijawab < daftarSoal.length
-        ? `Anda menjawab ${sudahDijawab} dari ${daftarSoal.length} soal (${mapelDipilih}).\nYakin ingin mengumpulkan ujian?`
-        : `Anda menjawab semua ${daftarSoal.length} soal (${mapelDipilih}).\nYakin ingin mengumpulkan ujian?`;
+  const nilaiAkhir = Math.round((jumlahBenar / daftarSoal.length) * 100);
+  const jumlahSalah = daftarSoal.length - jumlahBenar;
 
-    if (confirm(pesan)) {
-        kirimUjian();
-    }
+  // ✅ SUSUN DATA HASIL
+  const hasil = {
+    nama: dataPeserta.nama,
+    kelas: dataPeserta.kelas,
+    mapel: mapelDipilih,
+    total: daftarSoal.length,
+    benar: jumlahBenar,
+    salah: jumlahSalah,
+    nilai: nilaiAkhir,
+    waktu: new Date().toLocaleString('id-ID')
+  };
+
+  // ✅ KIRIM HASIL KE GOOGLE SHEETS
+  await kirimData('simpanHasil', hasil);
+
+  // Simpan hasil terbaru untuk halaman hasil
+  localStorage.setItem('hasilTerbaruCBT', JSON.stringify(hasil));
+
+  // Buka halaman hasil
+  window.location.href = "hasil.html";
 }
 
 // ======================================
-// KIRIM & HITUNG NILAI
+// FUNGSI BANTUAN: NAVIGASI NOMOR
 // ======================================
-function kirimUjian() {
-    clearInterval(penghitungWaktu);
+function buatNavigasiNomor() {
+  const wadah = document.getElementById('navNomor');
+  wadah.innerHTML = "";
+  for (let i = 1; i <= soalTerpilih.length; i++) {
+    const btn = document.createElement('button');
+    btn.className = "btn-nomor";
+    btn.textContent = i;
+    btn.onclick = () => bukaSoalNomor(i);
+    wadah.appendChild(btn);
+  }
+}
 
-    jumlahBenar = 0;
-    daftarSoal.forEach((soal, nomor) => {
-        if (jawabanPengguna[nomor] === soal.jawabanBenar) {
-            jumlahBenar++;
-        }
-    });
+function tandaiNomorDijawab() {
+  const tombol = document.querySelectorAll('.btn-nomor');
+  tombol.forEach((btn, urut) => {
+    btn.classList.remove('dijawab', 'aktif');
+    if (urut === indeksSaatIni) btn.classList.add('aktif');
+    if (jawabanDipilih[urut] !== undefined) btn.classList.add('dijawab');
+  });
+}
 
-    nilaiAkhir = Math.round((jumlahBenar / daftarSoal.length) * 100);
-
-    simpanHasilKeAdmin();
-
-    // Keluar dari sesi login
+function keluarUjian() {
+  if (confirm("⚠️ Yakin ingin keluar? Semua jawaban akan hilang!")) {
+    clearInterval(pengaturWaktu);
     localStorage.removeItem('pesertaCBT');
-
-    window.location.href = "hasil.html";
-}
-
-// ======================================
-// SIMPAN HASIL
-// ======================================
-function simpanHasilKeAdmin() {
-    const mapelDipilih = document.getElementById('pilihMapel').value;
-    const hasil = {
-        nama: dataPeserta.nama,
-        kelas: dataPeserta.kelas || '-',
-        mataPelajaran: mapelDipilih,
-        total: daftarSoal.length,
-        benar: jumlahBenar,
-        salah: daftarSoal.length - jumlahBenar,
-        nilai: nilaiAkhir,
-        waktu: new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })
-    };
-
-    let semuaHasil = [];
-    const tersimpan = localStorage.getItem('hasilUjianCBT');
-    if (tersimpan) {
-        semuaHasil = JSON.parse(tersimpan);
-    }
-    semuaHasil.push(hasil);
-    localStorage.setItem('hasilUjianCBT', JSON.stringify(semuaHasil));
+    window.location.href = "login-peserta.html";
+  }
 }
 </script>
 
