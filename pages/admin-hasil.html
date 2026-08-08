@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hasil Ujian — Admin CBT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        :root {
+            --utama: #7c3aed;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --muda: #f8fafc;
+            --batas: #e2e8f0;
+            --sukses: #10b981;
+            --peringatan: #f59e0b;
+            --bahaya: #ef4444;
+            --biru: #3b82f6;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--utama), #6d28d9);
+            color: white;
+            padding: 14px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .nav-kiri {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-kiri a {
+            color: white;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            opacity: 0.9;
+            transition: opacity 0.2s;
+        }
+
+        .nav-kiri a:hover { opacity: 1; }
+
+        .nav-kiri h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-kanan {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .tombol-keluar {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .tombol-keluar:hover { background: rgba(255,255,255,0.3); }
+
+        .wadah {
+            max-width: 1100px;
+            margin: 24px auto;
+            padding: 0 20px;
+        }
+
+        .kartu {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            margin-bottom: 24px;
+        }
+
+        .kartu h2 {
+            color: var(--gelap);
+            font-size: 20px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .baris-tombol {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .tombol {
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            transition: all 0.25s ease;
+        }
+
+        .tombol:hover { transform: translateY(-2px); box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+        .tombol-primer { background: var(--utama); color: white; }
+        .tombol-sukses { background: var(--sukses); color: white; }
+        .tombol-bahaya { background: var(--bahaya); color: white; }
+        .tombol-biru { background: var(--biru); color: white; }
+        .tombol-abu { background: var(--abu); color: white; }
+
+        .ringkasan {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .kotak-stat {
+            background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+            padding: 18px;
+            border-radius: 12px;
+            text-align: center;
+        }
+
+        .kotak-stat .angka {
+            font-size: 28px;
+            font-weight: 700;
+            color: var(--utama);
+        }
+
+        .kotak-stat label {
+            font-size: 13px;
+            color: var(--abu);
+            margin-top: 4px;
+            display: block;
+        }
+
+        .tabel-wadah {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th, td {
+            padding: 12px 10px;
+            text-align: left;
+            border-bottom: 1px solid var(--batas);
+        }
+
+        th {
+            background: #f8fafc;
+            font-weight: 600;
+            color: var(--gelap);
+        }
+
+        tr:hover {
+            background: #faf5ff;
+        }
+
+        .lulus { color: var(--sukses); font-weight: 600; }
+        .tidak-lulus { color: var(--bahaya); font-weight: 600; }
+
+        .kosong {
+            text-align: center;
+            padding: 50px 20px;
+            color: var(--abu);
+        }
+
+        .kosong i { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+
+        .sembunyi { display: none !important; }
+
+        .pesan {
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 16px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .pesan-sukses { background: #dcfce7; color: #166534; display: block; }
+        .pesan-bahaya { background: #fee2e2; color: #dc2626; display: block; }
+
+        .badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .badge-sukses { background: #dcfce7; color: #166534; }
+        .badge-bahaya { background: #fee2e2; color: #dc2626; }
+    </style>
+</head>
+<body>
+
+<nav id="areaTerkunci" class="terkunci">
+    <div class="nav-kiri">
+        <a href="admin-dashboard.html"><i class="fa-solid fa-chevron-left"></i> Kembali</a>
+        <h1>📊 Hasil Ujian Siswa</h1>
+    </div>
+    <div class="nav-kanan">
+        <span id="namaAdmin" style="font-size:14px; opacity:0.9;">Admin</span>
+        <button class="tombol-keluar" onclick="keluarAdmin()">
+            <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </button>
+    </div>
+</nav>
+
+<div class="terkunci" id="kontenAdmin">
+    <div class="wadah">
+        <!-- Notifikasi -->
+        <div id="pesanNotif" class="pesan"></div>
+
+        <!-- Ringkasan Statistik -->
+        <div class="kartu">
+            <h2>📈 Ringkasan Hasil Ujian</h2>
+            <div class="ringkasan">
+                <div class="kotak-stat">
+                    <div class="angka" id="jmlPeserta">0</div>
+                    <label>Jumlah Peserta</label>
+                </div>
+                <div class="kotak-stat">
+                    <div class="angka" id="rataNilai">0</div>
+                    <label>Rata-rata Nilai</label>
+                </div>
+                <div class="kotak-stat">
+                    <div class="angka" id="tertinggi">0</div>
+                    <label>Nilai Tertinggi</label>
+                </div>
+                <div class="kotak-stat">
+                    <div class="angka" id="terendah">0</div>
+                    <label>Nilai Terendah</label>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tombol Aksi -->
+        <div class="kartu">
+            <h2>⚙️ Pengaturan Data</h2>
+            <div class="baris-tombol">
+                <button class="tombol tombol-sukses" onclick="unduhExcel()">
+                    <i class="fa-solid fa-file-excel"></i> Unduh Excel (.xlsx)
+                </button>
+                <button class="tombol tombol-biru" onclick="unduhCSV()">
+                    <i class="fa-solid fa-file-csv"></i> Unduh CSV
+                </button>
+                <button class="tombol tombol-primer" onclick="unduhPDF()">
+                    <i class="fa-solid fa-file-pdf"></i> Cetak/PDF
+                </button>
+                <button class="tombol tombol-bahaya" onclick="hapusSemuaHasil()">
+                    <i class="fa-solid fa-trash"></i> Hapus Semua Hasil
+                </button>
+            </div>
+        </div>
+
+        <!-- Tabel Hasil -->
+        <div class="kartu">
+            <h2>📋 Daftar Hasil Ujian</h2>
+            <div class="tabel-wadah">
+                <table id="tabelHasil">
+                    <thead>
+                        <tr>
+                            <th>No</th>
+                            <th>Nama Pengguna</th>
+                            <th>Benar/Salah</th>
+                            <th>Nilai</th>
+                            <th>Status</th>
+                            <th>Waktu Selesai</th>
+                            <th>Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody id="isiTabel">
+                        <!-- Data hasil akan muncul di sini -->
+                    </tbody>
+                </table>
+            </div>
+            <div id="kotakKosong" class="kosong sembunyi">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <p>Belum ada peserta yang menyelesaikan ujian.<br>Hasil ujian akan muncul di sini setelah peserta selesai mengerjakan.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Halaman Terkunci -->
+<div id="blokKunci" style="text-align:center; padding:80px 20px;">
+    <i class="fa-solid fa-lock" style="font-size:64px; color:#cbd5e1;"></i>
+    <h3 style="margin-top:20px; color:#475569;">Akses Terkunci</h3>
+    <p style="color:#64748b; margin:10px 0 24px;">Anda harus login sebagai admin untuk melihat hasil ujian.</p>
+    <a href="admin-login.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Admin</a>
+    <br><br>
+    <a href="../index.html" style="color:#64748b; font-size:14px;">← Kembali ke Beranda</a>
+</div>
+
+<script>
+// ==================== KEAMANAN & INISIALISASI ====================
+let daftarHasil = [];
+
+window.onload = function() {
+    // Cek login admin
+    const dataAdmin = JSON.parse(localStorage.getItem('adminCBT') || 'null');
+    if (dataAdmin && dataAdmin.masuk === true) {
+        document.getElementById('areaTerkunci').classList.remove('terkunci');
+        document.getElementById('kontenAdmin').classList.remove('terkunci');
+        document.getElementById('blokKunci').style.display = 'none';
+        document.getElementById('namaAdmin').textContent = dataAdmin.nama;
+    } else {
+        return;
+    }
+
+    muatHasil();
+    tampilkanTabel();
+    hitungStatistik();
+};
+
+function keluarAdmin() {
+    if (confirm("Yakin ingin keluar?")) {
+        localStorage.removeItem('adminCBT');
+        window.location.href = "admin-login.html";
+    }
+}
+
+// ==================== MEMUAT DATA HASIL ====================
+function muatHasil() {
+    const tersimpan = localStorage.getItem('hasilUjianCBT');
+    if (tersimpan) {
+        daftarHasil = JSON.parse(tersimpan);
+    } else {
+        daftarHasil = [];
+    }
+}
+
+function simpanHasil() {
+    localStorage.setItem('hasilUjianCBT', JSON.stringify(daftarHasil));
+}
+
+// ==================== TAMPILAN TABEL & STATISTIK ====================
+function tampilkanTabel() {
+    const isi = document.getElementById('isiTabel');
+    const kosong = document.getElementById('kotakKosong');
+
+    if (daftarHasil.length === 0) {
+        isi.innerHTML = "";
+        kosong.classList.remove('sembunyi');
+        document.querySelector('.tabel-wadah table').style.display = 'none';
+        return;
+    }
+
+    kosong.classList.add('sembunyi');
+    document.querySelector('.tabel-wadah table').style.display = 'table';
+
+    // Urutkan dari yang terbaru
+    const urutTerbaru = [...daftarHasil].reverse();
+
+    isi.innerHTML = "";
+    urutTerbaru.forEach((h, i) => {
+        const baris = document.createElement('tr');
+        const statusLulus = h.nilai >= 70;
+        baris.innerHTML = `
+            <td>${i + 1}</td>
+            <td><strong>${h.nama || 'Anonim'}</strong></td>
+            <td>${h.benar}/${h.total} (${h.salah} salah)</td>
+            <td class="${statusLulus ? 'lulus' : 'tidak-lulus'}">${h.nilai}</td>
+            <td><span class="badge ${statusLulus ? 'badge-sukses' : 'badge-bahaya'}">${statusLulus ? 'Lulus' : 'Belum Lulus'}</span></td>
+            <td style="font-size:13px; color:var(--abu);">${h.waktu || '-'}</td>
+            <td>
+                <button class="tombol tombol-abu" style="padding:4px 8px; font-size:12px;" onclick="hapusSatu(${daftarHasil.length - 1 - i})">
+                    <i class="fa-solid fa-trash"></i>
+                </button>
+            </td>
+        `;
+        isi.appendChild(baris);
+    });
+}
+
+function hitungStatistik() {
+    if (daftarHasil.length === 0) {
+        document.getElementById('jmlPeserta').textContent = "0";
+        document.getElementById('rataNilai').textContent = "0";
+        document.getElementById('tertinggi').textContent = "0";
+        document.getElementById('terendah').textContent = "0";
+        return;
+    }
+
+    const arrNilai = daftarHasil.map(h => h.nilai);
+    const jumlah = daftarHasil.length;
+    const rata = Math.round(arrNilai.reduce((a, b) => a + b, 0) / jumlah);
+    const max = Math.max(...arrNilai);
+    const min = Math.min(...arrNilai);
+
+    document.getElementById('jmlPeserta').textContent = jumlah;
+    document.getElementById('rataNilai').textContent = rata;
+    document.getElementById('tertinggi').textContent = max;
+    document.getElementById('terendah').textContent = min;
+}
+
+// ==================== FUNGSI UNDUH DATA ====================
+function unduhExcel() {
+    if (daftarHasil.length === 0) {
+        tampilkanPesan("❌ Tidak ada data untuk diunduh!", "bahaya");
+        return;
+    }
+
+    const data = daftarHasil.map(h => ({
+        "Nama Pengguna": h.nama || "Anonim",
+        "Jumlah Soal": h.total,
+        "Jumlah Benar": h.benar,
+        "Jumlah Salah": h.salah,
+        "Nilai": h.nilai,
+        "Status": h.nilai >= 70 ? "Lulus" : "Belum Lulus",
+        "Waktu Selesai": h.waktu || "-"
+    }));
+
+    const buku = XLSX.utils.book_new();
+    const lembar = XLSX.utils.json_to_sheet(data);
+    XLSX.utils.book_append_sheet(buku, lembar, "Hasil Ujian");
+    XLSX.writeFile(buku, `hasil-ujian-${new Date().toISOString().slice(0,10)}.xlsx`);
+    tampilkanPesan("✅ Hasil berhasil diunduh dalam format Excel!", "sukses");
+}
+
+function unduhCSV() {
+    if (daftarHasil.length === 0) {
+        tampilkanPesan("❌ Tidak ada data untuk diunduh!", "bahaya");
+        return;
+    }
+
+    const kepala = "No,Nama Pengguna,Total Soal,Benar,Salah,Nilai,Status,Waktu Selesai\n";
+    const baris = daftarHasil.map((h, i) => {
+        const status = h.nilai >= 70 ? "Lulus" : "Belum Lulus";
+        return `${i+1},"${h.nama || 'Anonim'}",${h.total},${h.benar},${h.salah},${h.nilai},${status},"${h.waktu || '-'}"`;
+    }).join("\n");
+
+    const blob = new Blob([kepala + baris], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `hasil-ujian-${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    tampilkanPesan("✅ Hasil berhasil diunduh dalam format CSV!", "sukses");
+}
+
+function unduhPDF() {
+    if (daftarHasil.length === 0) {
+        tampilkanPesan("❌ Tidak ada data untuk dicetak!", "bahaya");
+        return;
+    }
+    window.print();
+}
+
+// ==================== HAPUS DATA ====================
+function hapusSatu(indeks) {
+    if (confirm("Yakin ingin menghapus hasil peserta ini?")) {
+        daftarHasil.splice(indeks, 1);
+        simpanHasil();
+        tampilkanTabel();
+        hitungStatistik();
+        tampilkanPesan("✅ Hasil peserta berhasil dihapus!", "sukses");
+    }
+}
+
+function hapusSemuaHasil() {
+    if (confirm("⚠️ Yakin ingin MENGHAPUS SEMUA HASIL UJIAN? Tindakan ini tidak dapat dibatalkan!")) {
+        daftarHasil = [];
+        simpanHasil();
+        tampilkanTabel();
+        hitungStatistik();
+        tampilkanPesan("✅ Semua hasil telah dihapus!", "sukses");
+    }
+}
+
+// ==================== PESAN NOTIFIKASI ====================
+function tampilkanPesan(teks, jenis) {
+    const kotak = document.getElementById('pesanNotif');
+    kotak.className = "pesan " + (jenis === "sukses" ? "pesan-sukses" : "pesan-bahaya");
+    kotak.textContent = teks;
+    setTimeout(() => kotak.style.display = "none", 4000);
+}
+</script>
+
+<style media="print">
+    nav, .baris-tombol, .aksi, .pesan, .tombol-keluar, a[href] { display: none !important; }
+    body { background: white; }
+    .kartu { box-shadow: none; border: 1px solid #ccc; }
+    table { width: 100%; }
+</style>
+
+</body>
+</html>
