@@ -469,7 +469,8 @@ let nilaiAkhir = 0;
 let dataPeserta = null;
 
 // ⏱️ WAKTU UJIAN DIATUR OLEH ADMIN (menit)
-const WAKTU_UJIAN_ADMIN = 60;
+const pengaturan = JSON.parse(localStorage.getItem('pengaturanCBT') || '{}');
+const WAKTU_UJIAN_ADMIN = pengaturan.waktuUjian || 60;
 
 // ======================================
 // CEK LOGIN & TAMPILKAN INFO
