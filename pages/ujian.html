@@ -15,6 +15,7 @@
             --sukses: #10b981;
             --peringatan: #f59e0b;
             --bahaya: #ef4444;
+            --biru: #3b82f6;
         }
 
         * {
@@ -40,6 +41,8 @@
             top: 0;
             z-index: 100;
             box-shadow: 0 2px 10px rgba(124,58,237,0.2);
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .nav-kiri h1 {
@@ -50,7 +53,15 @@
         .nav-kanan {
             display: flex;
             align-items: center;
-            gap: 20px;
+            gap: 16px;
+            flex-wrap: wrap;
+        }
+
+        .info-peserta-nav {
+            font-size: 14px;
+            background: rgba(255,255,255,0.18);
+            padding: 6px 12px;
+            border-radius: 20px;
         }
 
         .kotak-waktu {
@@ -95,39 +106,32 @@
 
         .kartu-mulai h2 {
             color: var(--gelap);
-            margin-bottom: 12px;
+            margin-bottom: 20px;
         }
 
-        .kartu-mulai p {
-            color: var(--abu);
-            margin-bottom: 24px;
-        }
-
-        .info-pengguna {
+        .info-peserta {
             background: #f0fdf4;
             border-left: 3px solid #10b981;
-            padding: 14px 16px;
+            padding: 16px;
             border-radius: 0 10px 10px 0;
-            max-width: 400px;
-            margin: 0 auto 20px;
+            max-width: 420px;
+            margin: 0 auto 24px;
             text-align: left;
         }
 
-        .info-pengguna .label {
-            font-size: 13px;
-            color: #166534;
-            font-weight: 500;
+        .info-peserta .baris {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            border-bottom: 1px dashed #bbf7d0;
         }
 
-        .info-pengguna .nilai {
-            font-size: 16px;
-            color: #14532d;
-            font-weight: 600;
-            margin-top: 4px;
-        }
+        .info-peserta .baris:last-child { border-bottom: none; }
+        .info-peserta .label { color: #166534; font-weight: 500; }
+        .info-peserta .nilai { color: #14532d; font-weight: 600; }
 
         .grup-input {
-            max-width: 400px;
+            max-width: 420px;
             margin: 0 auto 16px;
             text-align: left;
         }
@@ -139,7 +143,7 @@
             color: var(--gelap);
         }
 
-        input, select {
+        select, input[readonly] {
             width: 100%;
             padding: 12px 14px;
             font-size: 15px;
@@ -148,15 +152,15 @@
             outline: none;
         }
 
-        input:focus, select:focus {
-            border-color: var(--utama);
-            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
-        }
-
         input[readonly] {
             background: #f8fafc;
             color: var(--abu);
             cursor: not-allowed;
+        }
+
+        select:focus {
+            border-color: var(--utama);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
         }
 
         .tombol-primer {
@@ -189,15 +193,8 @@
             line-height: 1.6;
         }
 
-        .pilih-pengguna {
-            max-width: 400px;
-            margin: 0 auto 16px;
-            text-align: left;
-        }
         /* === AREA UJIAN === */
-        .area-ujian {
-            display: none;
-        }
+        .area-ujian { display: none; }
 
         .kartu-soal {
             background: white;
@@ -338,6 +335,17 @@
             font-size: 14px;
             display: none;
         }
+
+        .blok-tidak-ditemukan {
+            text-align: center;
+            padding: 60px 20px;
+        }
+
+        .blok-tidak-ditemukan i {
+            font-size: 64px;
+            color: #cbd5e1;
+            margin-bottom: 16px;
+        }
     </style>
 </head>
 <body>
@@ -347,6 +355,7 @@
         <h1>📝 Ujian Online</h1>
     </div>
     <div class="nav-kanan">
+        <div class="info-peserta-nav" id="infoPesertaNav"></div>
         <div class="kotak-waktu" id="kotakWaktu">⏱️ 00:00:00</div>
         <button class="tombol-akhir sembunyi" id="tombolAkhir" onclick="konfirmasiSelesai()">Selesai</button>
     </div>
@@ -355,24 +364,30 @@
 <div class="wadah">
 
     <!-- =================================== -->
-    <!-- HALAMAN AWAL: PILIH PENGGUNA & PILIH MAPEL -->
+    <!-- HALAMAN AWAL: Tampilkan Info & Pilih Mapel -->
     <!-- =================================== -->
     <div id="halamanMulai">
         <div class="kartu-mulai">
             <h2>Selamat Datang di Ujian Online 📝</h2>
-            <p>Silakan pilih nama peserta dan mata pelajaran sebelum memulai ujian.</p>
 
-            <!-- PILIH PENGGUNA DARI DAFTAR ADMIN -->
-            <div class="pilih-pengguna">
-                <label for="pilihPengguna">👤 Nama Peserta</label>
-                <select id="pilihPengguna" required>
-                    <option value="">— Pilih Nama Peserta —</option>
-                    <!-- Daftar nama akan dimuat otomatis dari admin-pengguna.html -->
-                </select>
+            <!-- INFO PESERTA: OTOMATIS DARI LOGIN, TIDAK BISA DIUBAH -->
+            <div class="info-peserta">
+                <div class="baris">
+                    <span class="label">👤 Nama Peserta</span>
+                    <span class="nilai" id="tampilNama">-</span>
+                </div>
+                <div class="baris">
+                    <span class="label">🏫 Kelas</span>
+                    <span class="nilai" id="tampilKelas">-</span>
+                </div>
+                <div class="baris">
+                    <span class="label">⏱️ Waktu Ujian</span>
+                    <span class="nilai" id="tampilWaktu">60 Menit</span>
+                </div>
             </div>
 
             <div class="grup-input">
-                <label for="pilihMapel">📚 Mata Pelajaran</label>
+                <label for="pilihMapel">📚 Pilih Mata Pelajaran</label>
                 <select id="pilihMapel">
                     <option value="Semua">Semua Mata Pelajaran</option>
                     <option value="Matematika">Matematika</option>
@@ -387,18 +402,12 @@
                 </select>
             </div>
 
-            <div class="grup-input">
-                <label for="lamaUjian">⏱️ Waktu Ujian (Menit)</label>
-                <input type="number" id="lamaUjian" value="60" min="5" max="300">
-            </div>
-
             <div class="info-aturan">
                 <strong>📋 Aturan Ujian:</strong>
                 <ul style="margin:8px 0 8px 20px; padding:0;">
-                    <li>Pilih nama peserta dari daftar yang sudah terdaftar</li>
                     <li>Pilih mata pelajaran untuk memfilter soal</li>
+                    <li>Waktu ujian sudah ditetapkan oleh Admin</li>
                     <li>Jawaban dapat diubah sebelum menekan tombol <strong>Selesai</strong></li>
-                    <li>Waktu akan berjalan otomatis saat ujian dimulai</li>
                     <li>Jika waktu habis, ujian akan dikirim otomatis</li>
                 </ul>
             </div>
@@ -440,6 +449,16 @@
             <div class="kotak-nomor" id="kotakNomor"></div>
         </div>
     </div>
+
+    <!-- =================================== -->
+    <!-- JIKA BELUM LOGIN -->
+    <!-- =================================== -->
+    <div id="blokBelumLogin" class="blok-tidak-ditemukan sembunyi">
+        <i class="fa-solid fa-lock"></i>
+        <h3>Anda belum login</h3>
+        <p style="color:#64748b; margin:10px 0 20px;">Silakan login terlebih dahulu untuk mengakses halaman ujian.</p>
+        <a href="login.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Peserta</a>
+    </div>
 </div>
 
 <script>
@@ -454,59 +473,45 @@ let sisaWaktuDetik = 0;
 let penghitungWaktu;
 let jumlahBenar = 0;
 let nilaiAkhir = 0;
-let namaPenggunaSaatIni = "";
+let dataPeserta = null;
+
+// ⏱️ WAKTU UJIAN DIATUR DI SINI OLEH ADMIN (menit)
+// Nanti bisa dipindah ke pengaturan admin
+const WAKTU_UJIAN_ADMIN = 60;
 
 // ======================================
-// MUAT DAFTAR PENGGUNA SAAT HALAMAN DIBUKA
+// CEK LOGIN & TAMPILKAN INFO SAAT HALAMAN DIBUKA
 // ======================================
 window.onload = function() {
-    muatDaftarPengguna();
+    cekLoginDanMuat();
 };
 
-function muatDaftarPengguna() {
-    const daftarPengguna = JSON.parse(localStorage.getItem('daftarPenggunaCBT') || '[]');
-    const pilih = document.getElementById('pilihPengguna');
+function cekLoginDanMuat() {
+    // Ambil data login peserta dari login-peserta.html
+    dataPeserta = JSON.parse(localStorage.getItem('pesertaCBT') || 'null');
 
-    // Hapus opsi lama (kecuali "Pilih Nama")
-    while (pilih.options.length > 1) {
-        pilih.remove(1);
+    if (!dataPeserta || !dataPeserta.masuk) {
+        // Belum login → tampilkan halaman login
+        document.getElementById('halamanMulai').classList.add('sembunyi');
+        document.getElementById('blokBelumLogin').classList.remove('sembunyi');
+        return;
     }
 
-    // Tambahkan nama pengguna dari admin-pengguna.html
-    daftarPengguna.forEach(pengguna => {
-        const opsi = document.createElement('option');
-        opsi.value = pengguna.nama;
-        opsi.textContent = pengguna.nama + " (" + (pengguna.kelas || "Tanpa Kelas") + ")";
-        pilih.appendChild(opsi);
-    });
+    // Sudah login → tampilkan info (TIDAK BISA DIUBAH)
+    document.getElementById('tampilNama').textContent = dataPeserta.nama;
+    document.getElementById('tampilKelas').textContent = dataPeserta.kelas || '-';
+    document.getElementById('tampilWaktu').textContent = WAKTU_UJIAN_ADMIN + ' Menit';
+    document.getElementById('infoPesertaNav').textContent = dataPeserta.nama;
 
-    // Jika tidak ada pengguna terdaftar
-    if (daftarPengguna.length === 0) {
-        const opsi = document.createElement('option');
-        opsi.value = "";
-        opsi.textContent = "⚠️ Belum ada pengguna terdaftar";
-        opsi.disabled = true;
-        pilih.appendChild(opsi);
-    }
+    // Simpan nama untuk hasil
+    localStorage.setItem('namaPenggunaCBT', dataPeserta.nama);
 }
 
 // ======================================
 // MULAI UJIAN
 // ======================================
 function mulaiUjian() {
-    const nama = document.getElementById('pilihPengguna').value;
     const mapel = document.getElementById('pilihMapel').value;
-    const lama = parseInt(document.getElementById('lamaUjian').value);
-
-    if (!nama) {
-        alert("⚠️ Silakan pilih nama peserta terlebih dahulu!\nJika belum ada nama, silakan daftarkan dulu di halaman Admin → Pengguna.");
-        document.getElementById('pilihPengguna').focus();
-        return;
-    }
-
-    // Simpan nama untuk dipakai di hasil
-    namaPenggunaSaatIni = nama;
-    localStorage.setItem('namaPenggunaCBT', nama);
 
     // Ambil soal dari penyimpanan
     const semuaSoal = JSON.parse(localStorage.getItem('bankSoalCBT') || '[]');
@@ -531,7 +536,7 @@ function mulaiUjian() {
     daftarSoal = soalTerpilih;
     jawabanPengguna = {};
     nomorSekarang = 0;
-    sisaWaktuDetik = lama * 60;
+    sisaWaktuDetik = WAKTU_UJIAN_ADMIN * 60; // Pakai waktu dari pengaturan admin
 
     // Sembunyikan halaman mulai, tampilkan ujian
     document.getElementById('halamanMulai').classList.add('sembunyi');
@@ -701,6 +706,9 @@ function kirimUjian() {
     // Simpan hasil ke halaman Admin
     simpanHasilKeAdmin();
 
+    // Keluar dari sesi login
+    localStorage.removeItem('pesertaCBT');
+
     // Pindah ke halaman hasil
     window.location.href = "hasil.html";
 }
@@ -710,7 +718,8 @@ function kirimUjian() {
 // ======================================
 function simpanHasilKeAdmin() {
     const hasil = {
-        nama: namaPenggunaSaatIni,
+        nama: dataPeserta.nama,
+        kelas: dataPeserta.kelas || '-',
         total: daftarSoal.length,
         benar: jumlahBenar,
         salah: daftarSoal.length - jumlahBenar,
