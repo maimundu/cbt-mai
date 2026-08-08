@@ -326,97 +326,107 @@
 </div>
 
 <script>
+// ==========================================================
+// ✅ GANTI URL INI DENGAN URL MILIK ANDA DARI APPS SCRIPT
+// ==========================================================
+const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzXXXXXX/exec";
+
+// ==========================================================
+// 🔧 FUNGSI BANTUAN: BACA & KIRIM DATA KE GOOGLE SHEETS
+// ==========================================================
+async function bacaData(aksi, param = {}) {
+  const p = new URLSearchParams({ action: aksi, ...param });
+  const res = await fetch(`${URL_GOOGLE_SHEETS}?${p}`);
+  return await res.json();
+}
+
+async function kirimData(aksi, obj) {
+  const p = new URLSearchParams({ action: aksi, data: JSON.stringify(obj) });
+  const res = await fetch(`${URL_GOOGLE_SHEETS}?${p}`);
+  return await res.json();
+}
+
 // ======================================
-// CEK HAK AKSES & MUAT DATA SAAT DIBUKA
+// CEK HAK AKSES & MUAT DATA SAAT BUKA
 // ======================================
 window.onload = function() {
-    const dataAdmin = JSON.parse(localStorage.getItem('adminCBT') || 'null');
-    if (dataAdmin && dataAdmin.masuk === true) {
-        document.getElementById('areaTerkunci').classList.remove('terkunci');
-        document.getElementById('kontenAdmin').classList.remove('terkunci');
-        document.getElementById('blokKunci').style.display = 'none';
-        document.getElementById('namaAdmin').textContent = dataAdmin.nama;
-    } else {
-        document.getElementById('blokKunci').classList.remove('sembunyi');
-        return;
-    }
-
-    muatPengaturan();
+  const dataAdmin = JSON.parse(localStorage.getItem('adminCBT') || 'null');
+  if (!dataAdmin || dataAdmin.masuk !== true) {
+    document.getElementById('blokTerkunci').classList.remove('sembunyi');
+    document.getElementById('kontenUtama').classList.add('sembunyi');
+    return;
+  }
+  document.getElementById('namaAdmin').textContent = dataAdmin.nama;
+  
+  // ✅ Baca pengaturan dari Google Sheets saat halaman dibuka
+  muatPengaturan();
 };
 
 function keluarAdmin() {
-    if (confirm("Yakin ingin keluar?")) {
-        localStorage.removeItem('adminCBT');
-        window.location.href = "admin-login.html";
-    }
+  if (confirm("Yakin ingin keluar?")) {
+    localStorage.removeItem('adminCBT');
+    window.location.href = "admin-login.html";
+  }
 }
 
 // ======================================
-// SIMPAN & MUAT PENGATURAN UJIAN
+// ✅ BACA PENGATURAN DARI GOOGLE SHEETS
 // ======================================
-function muatPengaturan() {
-    const pengaturan = JSON.parse(localStorage.getItem('pengaturanCBT') || '{}');
+async function muatPengaturan() {
+  const res = await bacaData('bacaPengaturan');
+  const p = res.data || {};
 
-    // Isi nilai default jika belum ada
-    document.getElementById('waktuUjian').value = pengaturan.waktuUjian || 60;
-    document.getElementById('nilaiLulus').value = pengaturan.nilaiLulus || 70;
-    document.getElementById('tampilkanJawaban').value = pengaturan.tampilkanJawaban || 'tidak';
-    document.getElementById('izinkanUlang').value = pengaturan.izinkanUlang || 'ya';
-
-    // Konfigurasi instansi
-    document.getElementById('namaInstansi').value = pengaturan.namaInstansi || '';
-    document.getElementById('tahunAjaran').value = pengaturan.tahunAjaran || '2025/2026';
-}
-
-function simpanPengaturan(event) {
-    event.preventDefault();
-
-    const pengaturan = {
-        waktuUjian: parseInt(document.getElementById('waktuUjian').value),
-        nilaiLulus: parseInt(document.getElementById('nilaiLulus').value),
-        tampilkanJawaban: document.getElementById('tampilkanJawaban').value,
-        izinkanUlang: document.getElementById('izinkanUlang').value,
-        namaInstansi: document.getElementById('namaInstansi').value.trim(),
-        tahunAjaran: document.getElementById('tahunAjaran').value.trim()
-    };
-
-    localStorage.setItem('pengaturanCBT', JSON.stringify(pengaturan));
-    tampilkanPesan("✅ Pengaturan ujian berhasil disimpan!", "sukses");
-    return false;
-}
-
-function simpanKonfigurasi() {
-    const pengaturan = JSON.parse(localStorage.getItem('pengaturanCBT') || '{}');
-    pengaturan.namaInstansi = document.getElementById('namaInstansi').value.trim();
-    pengaturan.tahunAjaran = document.getElementById('tahunAjaran').value.trim();
-
-    localStorage.setItem('pengaturanCBT', JSON.stringify(pengaturan));
-    tampilkanPesan("✅ Konfigurasi sistem berhasil disimpan!", "sukses");
+  // Isi setiap kolom form dengan nilai dari Google Sheets
+  document.getElementById('waktuUjian').value = p.waktuUjian || 60;
+  document.getElementById('nilaiLulus').value = p.nilaiLulus || 70;
+  document.getElementById('namaSekolah').value = p.namaSekolah || "SMA Contoh";
+  document.getElementById('tahunAjaran').value = p.tahunAjaran || "2025/2026";
+  
+  // Isi pilihan Ya/Tidak
+  document.querySelector(`input[name="tampilkanKunci"][value="${p.tampilkanKunci || 'tidak'}"]`).checked = true;
+  document.querySelector(`input[name="bisaUlang"][value="${p.bisaUlang || 'tidak'}"]`).checked = true;
 }
 
 // ======================================
-// RESET SEMUA DATA
+// ✅ SIMPAN PENGATURAN KE GOOGLE SHEETS
 // ======================================
-function konfirmasiResetData() {
-    if (confirm("⚠️ PERINGATAN KERAS!\n\nAnda akan menghapus SEMUA data:\n- Semua Soal\n- Semua Pengguna\n- Semua Hasil Ujian\n- Semua Pengaturan\n\nTindakan ini TIDAK DAPAT dibatalkan!\n\nKlik OK untuk lanjutkan.")) {
-        if (confirm("Yakin BENAR-BENAR ingin menghapus SEMUA data?")) {
-            localStorage.clear();
-            tampilkanPesan("🗑️ Semua data telah dihapus! Halaman akan dimuat ulang.", "bahaya");
-            setTimeout(() => location.reload(), 2000);
-        }
-    }
+async function simpanPengaturan(event) {
+  event.preventDefault();
+
+  // Ambil nilai dari setiap kolom form
+  const pengaturan = {
+    waktuUjian: parseInt(document.getElementById('waktuUjian').value),
+    nilaiLulus: parseInt(document.getElementById('nilaiLulus').value),
+    namaSekolah: document.getElementById('namaSekolah').value.trim(),
+    tahunAjaran: document.getElementById('tahunAjaran').value.trim(),
+    tampilkanKunci: document.querySelector('input[name="tampilkanKunci"]:checked').value,
+    bisaUlang: document.querySelector('input[name="bisaUlang"]:checked').value
+  };
+
+  // Kirim ke Google Sheets
+  const res = await kirimData('simpanPengaturan', pengaturan);
+
+  if (res.status === "sukses") {
+    tampilkanPesan("✅ Pengaturan berhasil disimpan ke Google Sheets!", "sukses");
+  } else {
+    tampilkanPesan("❌ Gagal menyimpan: " + (res.pesan || "Kesalahan tidak diketahui"), "bahaya");
+  }
 }
 
 // ======================================
-// PESAN NOTIFIKASI
+// FUNGSI BANTUAN TAMBAHAN
 // ======================================
 function tampilkanPesan(teks, jenis) {
-    const kotak = document.getElementById('pesanNotif');
-    kotak.className = "pesan " + (jenis === "sukses" ? "pesan-sukses" : "pesan-bahaya");
-    kotak.textContent = teks;
-    setTimeout(() => {
-        kotak.style.display = "none";
-    }, 4000);
+  const kotak = document.getElementById('pesanNotif');
+  kotak.className = "pesan pesan-" + jenis;
+  kotak.textContent = teks;
+  setTimeout(() => { kotak.style.display = "none"; }, 5000);
+}
+
+// Fungsi reset form
+function resetForm() {
+  document.getElementById('formPengaturan').reset();
+  muatPengaturan();
 }
 </script>
 
