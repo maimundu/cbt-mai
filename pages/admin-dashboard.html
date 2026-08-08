@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dasbor Admin — Sistem CBT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --utama: #7c3aed;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --muda: #f8fafc;
+            --batas: #e2e8f0;
+            --sukses: #10b981;
+            --peringatan: #f59e0b;
+            --bahaya: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--utama), #6d28d9);
+            color: white;
+            padding: 16px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 12px rgba(124, 58, 237, 0.25);
+        }
+
+        .nav-kiri {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .nav-kiri i {
+            font-size: 24px;
+        }
+
+        .nav-kiri h1 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        .nav-kanan {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .info-admin {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .tombol-keluar {
+            background: rgba(255,255,255,0.2);
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+
+        .tombol-keluar:hover {
+            background: rgba(255,255,255,0.3);
+        }
+
+        .wadah {
+            max-width: 1000px;
+            margin: 32px auto;
+            padding: 0 20px;
+        }
+
+        .selamat {
+            background: white;
+            padding: 24px;
+            border-radius: 16px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .selamat h2 {
+            color: var(--gelap);
+            font-size: 22px;
+            margin-bottom: 6px;
+        }
+
+        .selamat p {
+            color: var(--abu);
+            font-size: 14px;
+        }
+
+        .grid-menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 20px;
+        }
+
+        .kartu-menu {
+            background: white;
+            padding: 28px 24px;
+            border-radius: 16px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+            transition: all 0.3s ease;
+            cursor: pointer;
+            text-decoration: none;
+        }
+
+        .kartu-menu:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 24px rgba(124, 58, 237, 0.15);
+        }
+
+        .kartu-menu i {
+            font-size: 36px;
+            color: var(--utama);
+            margin-bottom: 14px;
+        }
+
+        .kartu-menu h3 {
+            color: var(--gelap);
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .kartu-menu p {
+            color: var(--abu);
+            font-size: 13px;
+        }
+
+        .statistik {
+            margin-top: 32px;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .statistik { grid-template-columns: 1fr; }
+        }
+
+        .kartu-stat {
+            background: white;
+            padding: 20px;
+            border-radius: 14px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .kartu-stat h4 {
+            color: var(--abu);
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .kartu-stat .angka {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--utama);
+        }
+
+        .terkunci { display: none !important; }
+    </style>
+</head>
+<body>
+
+<nav id="areaTerkunci" class="terkunci">
+    <div class="nav-kiri">
+        <i class="fa-solid fa-shield-halved"></i>
+        <h1>Dasbor Admin CBT</h1>
+    </div>
+    <div class="nav-kanan">
+        <div class="info-admin">
+            <strong id="namaAdmin">Admin</strong> — <span id="waktuMasuk"></span>
+        </div>
+        <button class="tombol-keluar" onclick="keluarAdmin()">
+            <i class="fa-solid fa-right-from-bracket"></i> Keluar
+        </button>
+    </div>
+</nav>
+
+<div class="terkunci" id="kontenAdmin">
+    <div class="wadah">
+        <div class="selamat">
+            <h2>👋 Selamat Datang, Admin!</h2>
+            <p>Gunakan menu di bawah untuk mengelola sistem ujian CBT.</p>
+        </div>
+
+        <div class="grid-menu">
+            <a href="admin-soal.html" class="kartu-menu">
+                <i class="fa-solid fa-list-ol"></i>
+                <h3>Kelola Soal</h3>
+                <p>Tambah, ubah, atau hapus soal ujian</p>
+            </a>
+            <a href="admin-hasil.html" class="kartu-menu">
+                <i class="fa-solid fa-clipboard-list"></i>
+                <h3>Lihat Hasil</h3>
+                <p>Lihat hasil & laporan ujian peserta</p>
+            </a>
+            <a href="admin-pengguna.html" class="kartu-menu">
+                <i class="fa-solid fa-users"></i>
+                <h3>Kelola Pengguna</h3>
+                <p>Atur akun pengguna sistem</p>
+            </a>
+            <a href="#" class="kartu-menu">
+                <i class="fa-solid fa-cog"></i>
+                <h3>Pengaturan</h3>
+                <p>Atur waktu, nilai, dan konfigurasi</p>
+            </a>
+        </div>
+
+        <div class="statistik">
+            <div class="kartu-stat">
+                <h4>Jumlah Soal</h4>
+                <div class="angka">5</div>
+            </div>
+            <div class="kartu-stat">
+                <h4>Peserta Ujian</h4>
+                <div class="angka">0</div>
+            </div>
+            <div class="kartu-stat">
+                <h4>Rata-rata Nilai</h4>
+                <div class="angka">-</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="blokKunci" style="text-align:center; padding:60px 20px;">
+    <i class="fa-solid fa-lock" style="font-size:64px; color:#cbd5e1;"></i>
+    <h3 style="margin-top:20px; color:#475569;">Akses Terkunci</h3>
+    <p style="color:#64748b; margin:10px 0 24px;">Anda harus login sebagai admin untuk mengakses halaman ini.</p>
+    <a href="admin-login.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Admin</a>
+    <br><br>
+    <a href="../index.html" style="color:#64748b; font-size:14px;">← Kembali ke Beranda</a>
+</div>
+
+<script>
+// Cek apakah sudah login sebagai admin
+window.onload = function() {
+    const data = JSON.parse(localStorage.getItem('adminCBT') || 'null');
+    if (data && data.masuk === true) {
+        document.getElementById('areaTerkunci').classList.remove('terkunci');
+        document.getElementById('kontenAdmin').classList.remove('terkunci');
+        document.getElementById('blokKunci').style.display = 'none';
+        document.getElementById('namaAdmin').textContent = data.nama;
+        document.getElementById('waktuMasuk').textContent = data.waktu;
+    }
+};
+
+// Fungsi Keluar
+function keluarAdmin() {
+    if (confirm("Yakin ingin keluar dari akun admin?")) {
+        localStorage.removeItem('adminCBT');
+        window.location.href = "admin-login.html";
+    }
+}
+</script>
+
+</body>
+</html>
