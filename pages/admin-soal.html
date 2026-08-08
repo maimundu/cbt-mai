@@ -414,213 +414,243 @@
 </div>
 
 <script>
+// ==========================================================
+// ✅ GANTI URL INI DENGAN URL MILIK ANDA DARI APPS SCRIPT
+// ==========================================================
+const URL_GOOGLE_SHEETS = "https://script.google.com/macros/s/AKfycbzXXXXXX/exec";
+
+// ==========================================================
+// 🔧 FUNGSI BANTUAN: BACA & KIRIM DATA KE GOOGLE SHEETS
+// ==========================================================
+async function bacaData(aksi, param = {}) {
+  const p = new URLSearchParams({ action: aksi, ...param });
+  const res = await fetch(`${URL_GOOGLE_SHEETS}?${p}`);
+  return await res.json();
+}
+
+async function kirimData(aksi, obj) {
+  const p = new URLSearchParams({ action: aksi, data: JSON.stringify(obj) });
+  const res = await fetch(`${URL_GOOGLE_SHEETS}?${p}`);
+  return await res.json();
+}
+
 // ======================================
 // CEK HAK AKSES
 // ======================================
 let gambarTerbaca = "";
 
 window.onload = function() {
-    const dataAdmin = JSON.parse(localStorage.getItem('adminCBT') || 'null');
-    if (!dataAdmin || dataAdmin.masuk !== true) {
-        document.getElementById('blokTerkunci').classList.remove('sembunyi');
-        document.getElementById('kontenUtama').classList.add('sembunyi');
-        return;
-    }
-    document.getElementById('namaAdmin').textContent = dataAdmin.nama;
-    tampilkanDaftarSoal();
+  const dataAdmin = JSON.parse(localStorage.getItem('adminCBT') || 'null');
+  if (!dataAdmin || dataAdmin.masuk !== true) {
+    document.getElementById('blokTerkunci').classList.remove('sembunyi');
+    document.getElementById('kontenUtama').classList.add('sembunyi');
+    return;
+  }
+  document.getElementById('namaAdmin').textContent = dataAdmin.nama;
+  tampilkanDaftarSoal();
 };
 
 function keluarAdmin() {
-    if (confirm("Yakin ingin keluar?")) {
-        localStorage.removeItem('adminCBT');
-        window.location.href = "admin-login.html";
-    }
+  if (confirm("Yakin ingin keluar?")) {
+    localStorage.removeItem('adminCBT');
+    window.location.href = "admin-login.html";
+  }
 }
 
 // ======================================
 // PRATINJAU & BACA GAMBAR SOAL
 // ======================================
 function pratinjauGambar(input) {
-    if (input.files && input.files[0]) {
-        const pembaca = new FileReader();
-        pembaca.onload = function(e) {
-            gambarTerbaca = e.target.result;
-            document.getElementById('gambarPratinjau').src = gambarTerbaca;
-            document.getElementById('kotakPratinjau').classList.remove('sembunyi');
-        };
-        pembaca.readAsDataURL(input.files[0]);
+  if (input.files && input.files[0]) {
+    const file = input.files[0];
+
+    // ⚠️ Batasi ukuran gambar maksimal 1 MB
+    if (file.size > 1 * 1024 * 1024) {
+      alert("⚠️ Ukuran gambar terlalu besar!\nMaksimal 1 MB. Silakan kompres dulu sebelum diunggah.");
+      input.value = "";
+      return;
     }
+
+    const pembaca = new FileReader();
+    pembaca.onload = function(e) {
+      gambarTerbaca = e.target.result;
+      document.getElementById('gambarPratinjau').src = gambarTerbaca;
+      document.getElementById('kotakPratinjau').classList.remove('sembunyi');
+    };
+    pembaca.readAsDataURL(file);
+  }
 }
 
 function hapusGambar() {
-    gambarTerbaca = "";
-    document.getElementById('unggahGambar').value = "";
-    document.getElementById('kotakPratinjau').classList.add('sembunyi');
+  gambarTerbaca = "";
+  document.getElementById('unggahGambar').value = "";
+  document.getElementById('kotakPratinjau').classList.add('sembunyi');
+  document.getElementById('gambarPratinjau').src = "";
 }
 
 // ======================================
-// SIMPAN SOAL (TAMBAH / EDIT)
+// ✅ SIMPAN SOAL — VERSI GOOGLE SHEETS
 // ======================================
-function simpanSoal(event) {
-    event.preventDefault();
+async function simpanSoal(event) {
+  event.preventDefault();
 
-    const mapel = document.getElementById('pilihMapel').value.trim();
-    const soalTeks = document.getElementById('teksSoal').value.trim();
-    const A = document.getElementById('pilihanA').value.trim();
-    const B = document.getElementById('pilihanB').value.trim();
-    const C = document.getElementById('pilihanC').value.trim();
-    const D = document.getElementById('pilihanD').value.trim();
-    const E = document.getElementById('pilihanE').value.trim();
-    const jawabanBenar = parseInt(document.getElementById('jawabanBenar').value);
-    const indeksEdit = parseInt(document.getElementById('indeksEdit').value);
+  const mapel = document.getElementById('pilihMapel').value.trim();
+  const soalTeks = document.getElementById('teksSoal').value.trim();
+  const A = document.getElementById('pilihanA').value.trim();
+  const B = document.getElementById('pilihanB').value.trim();
+  const C = document.getElementById('pilihanC').value.trim();
+  const D = document.getElementById('pilihanD').value.trim();
+  const E = document.getElementById('pilihanE').value.trim();
+  const jawabanBenar = parseInt(document.getElementById('jawabanBenar').value);
+  const indeksEdit = parseInt(document.getElementById('indeksEdit').value);
 
-    if (!mapel || !soalTeks || !A || !B || isNaN(jawabanBenar)) {
-        tampilkanPesan("❌ Lengkapi semua kolom yang bertanda bintang!", "bahaya");
-        return false;
-    }
+  if (!mapel || !soalTeks || !A || !B || isNaN(jawabanBenar)) {
+    tampilkanPesan("❌ Lengkapi semua kolom yang bertanda bintang!", "bahaya");
+    return false;
+  }
 
-    // Susun daftar pilihan (hilangkan yang kosong)
-    const pilihan = [A, B];
-    if (C) pilihan.push(C);
-    if (D) pilihan.push(D);
-    if (E) pilihan.push(E);
+  // Susun daftar pilihan
+  const pilihan = [A, B];
+  if (C) pilihan.push(C);
+  if (D) pilihan.push(D);
+  if (E) pilihan.push(E);
 
-    const soalBaru = {
-        mapel: mapel,
-        soal: soalTeks,
-        pilihan: pilihan,
-        jawabanBenar: jawabanBenar,
-        gambar: gambarTerbaca // <-- Gambar tersimpan sebagai base64, kosong jika tidak ada
-    };
+  // ✅ LOGIKA GAMBAR: Jika edit tanpa ganti gambar → ambil gambar lama
+  let gambarAkhir = gambarTerbaca;
 
-    // Ambil semua soal yang sudah ada
-    const semuaSoal = JSON.parse(localStorage.getItem('bankSoalCBT') || '[]');
+  const soalBaru = {
+    idx: indeksEdit,
+    mapel: mapel,
+    soal: soalTeks,
+    pilihan: pilihan,
+    jawabanBenar: jawabanBenar,
+    gambar: gambarAkhir
+  };
 
-    if (indeksEdit >= 0) {
-        // EDIT soal yang sudah ada
-        // Jika tidak mengganti gambar, pertahankan gambar lama
-        if (!gambarTerbaca && semuaSoal[indeksEdit].gambar) {
-            soalBaru.gambar = semuaSoal[indeksEdit].gambar;
-        }
-        semuaSoal[indeksEdit] = soalBaru;
-        tampilkanPesan("✅ Soal berhasil diperbarui!", "sukses");
-    } else {
-        // TAMBAH soal baru
-        semuaSoal.push(soalBaru);
-        tampilkanPesan("✅ Soal berhasil ditambahkan!", "sukses");
-    }
+  // ✅ KIRIM KE GOOGLE SHEETS
+  const res = await kirimData('simpanSoal', soalBaru);
 
-    // Simpan kembali ke penyimpanan
-    localStorage.setItem('bankSoalCBT', JSON.stringify(semuaSoal));
-
-    // Reset & muat ulang daftar
+  if (res.status === "sukses") {
+    tampilkanPesan("✅ Soal berhasil disimpan ke Google Sheets!", "sukses");
     resetForm();
     tampilkanDaftarSoal();
-    return false;
+  } else {
+    tampilkanPesan("❌ Gagal menyimpan: " + (res.pesan || "Kesalahan tidak diketahui"), "bahaya");
+  }
+
+  return false;
 }
 
 // ======================================
-// TAMPILKAN DAFTAR SOAL
+// ✅ TAMPILKAN DAFTAR SOAL — VERSI GOOGLE SHEETS
 // ======================================
-function tampilkanDaftarSoal() {
-    const semuaSoal = JSON.parse(localStorage.getItem('bankSoalCBT') || '[]');
-    const filter = document.getElementById('filterMapel').value;
-    const daftar = filter ? semuaSoal.filter(s => s.mapel === filter) : semuaSoal;
+async function tampilkanDaftarSoal() {
+  // ✅ BACA DATA DARI GOOGLE SHEETS
+  const res = await bacaData('bacaSoal');
+  const semuaSoal = res.data || [];
 
-    document.getElementById('jumlahSoal').textContent = daftar.length;
-    const tbody = document.getElementById('daftarSoalTabel');
-    tbody.innerHTML = "";
+  const filter = document.getElementById('filterMapel').value;
+  const daftar = filter ? semuaSoal.filter(s => s.mapel === filter) : semuaSoal;
 
-    if (daftar.length === 0) {
-        tbody.innerHTML = `<tr><td colspan="6" class="tengah">Belum ada soal. Silakan tambahkan soal baru di atas.</td></tr>`;
-        return;
-    }
+  document.getElementById('jumlahSoal').textContent = daftar.length;
+  const tbody = document.getElementById('daftarSoalTabel');
+  tbody.innerHTML = "";
 
-    daftar.forEach((soal, idx) => {
-        const nomorAsli = semuaSoal.indexOf(soal) + 1;
-        const baris = document.createElement('tr');
-        baris.innerHTML = `
-            <td>${nomorAsli}</td>
-            <td><span class="tag-mapel">${soal.mapel}</span></td>
-            <td style="max-width:350px;">${potongTeks(soal.soal, 60)}</td>
-            <td>${['A','B','C','D','E'][soal.jawabanBenar] || '-'}</td>
-            <td style="text-align:center;">${soal.gambar ? '<i class="fa-solid fa-image" title="Ada Gambar"></i>' : '-'}</td>
-            <td>
-                <button class="tombol tombol-primer tombol-kecil" onclick="editSoal(${nomorAsli - 1})">
-                    <i class="fa-solid fa-pen-to-square"></i> Edit
-                </button>
-                <button class="tombol tombol-bahaya tombol-kecil" onclick="hapusSoal(${nomorAsli - 1})">
-                    <i class="fa-solid fa-trash"></i> Hapus
-                </button>
-            </td>
-        `;
-        tbody.appendChild(baris);
-    });
+  if (daftar.length === 0) {
+    tbody.innerHTML = `<tr><td colspan="6" class="tengah">Belum ada soal. Silakan tambahkan soal baru di atas.</td></tr>`;
+    return;
+  }
+
+  daftar.forEach((soal, idx) => {
+    const nomorAsli = semuaSoal.indexOf(soal) + 1;
+    const baris = document.createElement('tr');
+    baris.innerHTML = `
+      <td>${nomorAsli}</td>
+      <td><span class="tag-mapel">${soal.mapel}</span></td>
+      <td style="max-width:350px;">${potongTeks(soal.soal, 60)}</td>
+      <td>${['A','B','C','D','E'][soal.jawabanBenar] || '-'}</td>
+      <td style="text-align:center;">${soal.gambar ? '<i class="fa-solid fa-image" title="Ada Gambar"></i>' : '-'}</td>
+      <td>
+        <button class="tombol tombol-primer tombol-kecil" onclick="editSoal(${nomorAsli - 1})">
+          <i class="fa-solid fa-pen-to-square"></i> Edit
+        </button>
+        <button class="tombol tombol-bahaya tombol-kecil" onclick="hapusSoal(${nomorAsli - 1})">
+          <i class="fa-solid fa-trash"></i> Hapus
+        </button>
+      </td>
+    `;
+    tbody.appendChild(baris);
+  });
 }
 
 // ======================================
 // EDIT SOAL
 // ======================================
-function editSoal(indeks) {
-    const semuaSoal = JSON.parse(localStorage.getItem('bankSoalCBT') || '[]');
-    const soal = semuaSoal[indeks];
+async function editSoal(indeks) {
+  // ✅ BACA ULANG DARI GOOGLE SHEETS
+  const res = await bacaData('bacaSoal');
+  const semuaSoal = res.data || [];
+  const soal = semuaSoal[indeks];
 
-    document.getElementById('indeksEdit').value = indeks;
-    document.getElementById('judulForm').textContent = "✏️ Edit Soal";
-    document.getElementById('pilihMapel').value = soal.mapel;
-    document.getElementById('teksSoal').value = soal.soal;
-    document.getElementById('pilihanA').value = soal.pilihan[0] || '';
-    document.getElementById('pilihanB').value = soal.pilihan[1] || '';
-    document.getElementById('pilihanC').value = soal.pilihan[2] || '';
-    document.getElementById('pilihanD').value = soal.pilihan[3] || '';
-    document.getElementById('pilihanE').value = soal.pilihan[4] || '';
-    document.getElementById('jawabanBenar').value = soal.jawabanBenar;
+  document.getElementById('indeksEdit').value = indeks;
+  document.getElementById('judulForm').textContent = "✏️ Edit Soal";
+  document.getElementById('pilihMapel').value = soal.mapel;
+  document.getElementById('teksSoal').value = soal.soal;
+  document.getElementById('pilihanA').value = soal.pilihan[0] || '';
+  document.getElementById('pilihanB').value = soal.pilihan[1] || '';
+  document.getElementById('pilihanC').value = soal.pilihan[2] || '';
+  document.getElementById('pilihanD').value = soal.pilihan[3] || '';
+  document.getElementById('pilihanE').value = soal.pilihan[4] || '';
+  document.getElementById('jawabanBenar').value = soal.jawabanBenar;
 
-    // Tampilkan gambar lama jika ada
-    if (soal.gambar) {
-        gambarTerbaca = soal.gambar;
-        document.getElementById('gambarPratinjau').src = soal.gambar;
-        document.getElementById('kotakPratinjau').classList.remove('sembunyi');
-    } else {
-        gambarTerbaca = "";
-        document.getElementById('kotakPratinjau').classList.add('sembunyi');
-    }
+  // ✅ Tampilkan gambar lama saat edit
+  if (soal.gambar && soal.gambar !== "") {
+    gambarTerbaca = soal.gambar;
+    document.getElementById('gambarPratinjau').src = soal.gambar;
+    document.getElementById('kotakPratinjau').classList.remove('sembunyi');
+  } else {
+    gambarTerbaca = "";
+    document.getElementById('kotakPratinjau').classList.add('sembunyi');
+  }
 
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+  window.scrollTo({ top: 0, behavior: 'smooth' });
 }
 
 // ======================================
 // HAPUS SOAL
 // ======================================
-function hapusSoal(indeks) {
-    if (confirm("⚠️ Yakin ingin menghapus soal ini?\nTindakan ini tidak dapat dibatalkan!")) {
-        const semuaSoal = JSON.parse(localStorage.getItem('bankSoalCBT') || '[]');
-        semuaSoal.splice(indeks, 1);
-        localStorage.setItem('bankSoalCBT', JSON.stringify(semuaSoal));
-        tampilkanPesan("✅ Soal berhasil dihapus!", "sukses");
-        tampilkanDaftarSoal();
+async function hapusSoal(indeks) {
+  if (confirm("⚠️ Yakin ingin menghapus soal ini?\nTindakan ini tidak dapat dibatalkan!")) {
+    // ✅ KIRIM PERINTAH HAPUS KE GOOGLE SHEETS
+    const res = await bacaData('hapusSoal', { idx: indeks });
+    if (res.status === "sukses") {
+      tampilkanPesan("✅ Soal berhasil dihapus!", "sukses");
+      tampilkanDaftarSoal();
+    } else {
+      tampilkanPesan("❌ Gagal menghapus!", "bahaya");
     }
+  }
 }
 
 // ======================================
 // FUNGSI BANTUAN
 // ======================================
 function resetForm() {
-    document.getElementById('formSoal').reset();
-    document.getElementById('indeksEdit').value = "-1";
-    document.getElementById('judulForm').textContent = "➕ Tambah Soal Baru";
-    hapusGambar();
+  document.getElementById('formSoal').reset();
+  document.getElementById('indeksEdit').value = "-1";
+  document.getElementById('judulForm').textContent = "➕ Tambah Soal Baru";
+  hapusGambar();
 }
 
 function potongTeks(teks, panjang) {
-    return teks.length > panjang ? teks.substring(0, panjang) + "..." : teks;
+  return teks.length > panjang ? teks.substring(0, panjang) + "..." : teks;
 }
 
 function tampilkanPesan(teks, jenis) {
-    const kotak = document.getElementById('pesanNotif');
-    kotak.className = "pesan pesan-" + jenis;
-    kotak.textContent = teks;
-    setTimeout(() => { kotak.style.display = "none"; }, 5000);
+  const kotak = document.getElementById('pesanNotif');
+  kotak.className = "pesan pesan-" + jenis;
+  kotak.textContent = teks;
+  setTimeout(() => { kotak.style.display = "none"; }, 5000);
 }
 </script>
 
