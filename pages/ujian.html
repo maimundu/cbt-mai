@@ -95,7 +95,6 @@
             padding: 0 20px;
         }
 
-        /* === HALAMAN SEBELUM UJIAN === */
         .kartu-mulai {
             background: white;
             border-radius: 16px;
@@ -193,7 +192,6 @@
             line-height: 1.6;
         }
 
-        /* === AREA UJIAN === */
         .area-ujian { display: none; }
 
         .kartu-soal {
@@ -272,7 +270,6 @@
             margin-right: 10px;
         }
 
-        /* === NAVIGASI SOAL === */
         .baris-navigasi {
             display: flex;
             justify-content: space-between;
@@ -363,14 +360,12 @@
 
 <div class="wadah">
 
-    <!-- =================================== -->
-    <!-- HALAMAN AWAL: Tampilkan Info & Pilih Mapel -->
-    <!-- =================================== -->
+    <!-- HALAMAN AWAL -->
     <div id="halamanMulai">
         <div class="kartu-mulai">
             <h2>Selamat Datang di Ujian Online 📝</h2>
 
-            <!-- INFO PESERTA: OTOMATIS DARI LOGIN, TIDAK BISA DIUBAH -->
+            <!-- INFO PESERTA: OTOMATIS DARI LOGIN -->
             <div class="info-peserta">
                 <div class="baris">
                     <span class="label">👤 Nama Peserta</span>
@@ -386,10 +381,11 @@
                 </div>
             </div>
 
+            <!-- PILIH MATA PELAJARAN -->
             <div class="grup-input">
                 <label for="pilihMapel">📚 Pilih Mata Pelajaran</label>
-                <select id="pilihMapel">
-                    <option value="Semua">Semua Mata Pelajaran</option>
+                <select id="pilihMapel" required>
+                    <option value="">— Silakan Pilih Mata Pelajaran —</option>
                     <option value="Matematika">Matematika</option>
                     <option value="Bahasa Indonesia">Bahasa Indonesia</option>
                     <option value="Bahasa Inggris">Bahasa Inggris</option>
@@ -405,7 +401,8 @@
             <div class="info-aturan">
                 <strong>📋 Aturan Ujian:</strong>
                 <ul style="margin:8px 0 8px 20px; padding:0;">
-                    <li>Pilih mata pelajaran untuk memfilter soal</li>
+                    <li>Pilih mata pelajaran yang akan diujikan</li>
+                    <li>Hanya soal dari mata pelajaran yang dipilih yang akan muncul</li>
                     <li>Waktu ujian sudah ditetapkan oleh Admin</li>
                     <li>Jawaban dapat diubah sebelum menekan tombol <strong>Selesai</strong></li>
                     <li>Jika waktu habis, ujian akan dikirim otomatis</li>
@@ -416,9 +413,7 @@
         </div>
     </div>
 
-    <!-- =================================== -->
     <!-- AREA UJIAN -->
-    <!-- =================================== -->
     <div id="areaUjian" class="area-ujian">
         <div class="peringatan-waktu" id="peringatanWaktu">⚠️ Waktu tinggal sedikit!</div>
 
@@ -450,14 +445,12 @@
         </div>
     </div>
 
-    <!-- =================================== -->
     <!-- JIKA BELUM LOGIN -->
-    <!-- =================================== -->
     <div id="blokBelumLogin" class="blok-tidak-ditemukan sembunyi">
         <i class="fa-solid fa-lock"></i>
         <h3>Anda belum login</h3>
         <p style="color:#64748b; margin:10px 0 20px;">Silakan login terlebih dahulu untuk mengakses halaman ujian.</p>
-        <a href="login.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Peserta</a>
+        <a href="login-peserta.html" style="background:#7c3aed; color:white; padding:10px 20px; border-radius:10px; text-decoration:none; display:inline-block;">Login Peserta</a>
     </div>
 </div>
 
@@ -475,70 +468,72 @@ let jumlahBenar = 0;
 let nilaiAkhir = 0;
 let dataPeserta = null;
 
-// ⏱️ WAKTU UJIAN DIATUR DI SINI OLEH ADMIN (menit)
-// Nanti bisa dipindah ke pengaturan admin
+// ⏱️ WAKTU UJIAN DIATUR OLEH ADMIN (menit)
 const WAKTU_UJIAN_ADMIN = 60;
 
 // ======================================
-// CEK LOGIN & TAMPILKAN INFO SAAT HALAMAN DIBUKA
+// CEK LOGIN & TAMPILKAN INFO
 // ======================================
 window.onload = function() {
     cekLoginDanMuat();
 };
 
 function cekLoginDanMuat() {
-    // Ambil data login peserta dari login-peserta.html
     dataPeserta = JSON.parse(localStorage.getItem('pesertaCBT') || 'null');
 
     if (!dataPeserta || !dataPeserta.masuk) {
-        // Belum login → tampilkan halaman login
         document.getElementById('halamanMulai').classList.add('sembunyi');
         document.getElementById('blokBelumLogin').classList.remove('sembunyi');
         return;
     }
 
-    // Sudah login → tampilkan info (TIDAK BISA DIUBAH)
+    // Tampilkan info peserta (hanya tampilan, tidak bisa diubah)
     document.getElementById('tampilNama').textContent = dataPeserta.nama;
     document.getElementById('tampilKelas').textContent = dataPeserta.kelas || '-';
     document.getElementById('tampilWaktu').textContent = WAKTU_UJIAN_ADMIN + ' Menit';
     document.getElementById('infoPesertaNav').textContent = dataPeserta.nama;
 
-    // Simpan nama untuk hasil
     localStorage.setItem('namaPenggunaCBT', dataPeserta.nama);
 }
 
 // ======================================
-// MULAI UJIAN
+// MULAI UJIAN DENGAN FILTER MAPEL
 // ======================================
 function mulaiUjian() {
     const mapel = document.getElementById('pilihMapel').value;
 
-    // Ambil soal dari penyimpanan
+    // Validasi: wajib pilih mapel
+    if (!mapel) {
+        alert("⚠️ Silakan pilih mata pelajaran terlebih dahulu!");
+        document.getElementById('pilihMapel').focus();
+        return;
+    }
+
+    // Ambil SEMUA soal dari penyimpanan
     const semuaSoal = JSON.parse(localStorage.getItem('bankSoalCBT') || '[]');
     if (semuaSoal.length === 0) {
         alert("⚠️ Belum ada soal yang tersedia! Hubungi admin untuk menambahkan soal terlebih dahulu.");
         return;
     }
 
-    // Filter berdasarkan mata pelajaran
-    if (mapel === "Semua") {
-        soalTerpilih = semuaSoal;
-    } else {
-        soalTerpilih = semuaSoal.filter(s => s.mapel === mapel);
-    }
+    // 🔍 FILTER KETAT: HANYA AMBIL SOAL SESUAI MAPEL YANG DIPILIH
+    soalTerpilih = semuaSoal.filter(s => s.mapel === mapel);
 
     if (soalTerpilih.length === 0) {
-        alert(`⚠️ Belum ada soal untuk mata pelajaran: ${mapel}`);
+        alert(`⚠️ Belum ada soal untuk mata pelajaran: ${mapel}\nHubungi admin untuk menambahkan soal terlebih dahulu.`);
         return;
     }
 
-    // Siapkan tampilan ujian
+    // ✅ Yang muncul HANYA soal mapel yang dipilih
     daftarSoal = soalTerpilih;
     jawabanPengguna = {};
     nomorSekarang = 0;
-    sisaWaktuDetik = WAKTU_UJIAN_ADMIN * 60; // Pakai waktu dari pengaturan admin
+    sisaWaktuDetik = WAKTU_UJIAN_ADMIN * 60;
 
-    // Sembunyikan halaman mulai, tampilkan ujian
+    // Tampilkan info mapel yang sedang diujikan
+    console.log(`✅ Memuat ${daftarSoal.length} soal dari mapel: ${mapel}`);
+
+    // Tampilkan area ujian
     document.getElementById('halamanMulai').classList.add('sembunyi');
     document.getElementById('areaUjian').classList.remove('area-ujian');
     document.getElementById('areaUjian').style.display = 'block';
@@ -551,7 +546,7 @@ function mulaiUjian() {
 }
 
 // ======================================
-// FUNGSI WAKTU
+// PENGHITUNG WAKTU
 // ======================================
 function mulaiHitungWaktu() {
     penghitungWaktu = setInterval(() => {
@@ -586,7 +581,6 @@ function tampilkanSoal() {
     document.getElementById('teksSoal').textContent = soal.soal;
     document.getElementById('labelMapel').textContent = soal.mapel || "Lainnya";
 
-    // Tampilkan gambar jika ada
     if (soal.gambar) {
         document.getElementById('gambarSoal').src = soal.gambar;
         document.getElementById('gambarSoal').classList.remove('sembunyi');
@@ -594,7 +588,6 @@ function tampilkanSoal() {
         document.getElementById('gambarSoal').classList.add('sembunyi');
     }
 
-    // Tampilkan pilihan A–E
     const wadah = document.getElementById('wadahPilihan');
     wadah.innerHTML = "";
     const huruf = ['A', 'B', 'C', 'D', 'E'];
@@ -607,7 +600,6 @@ function tampilkanSoal() {
         wadah.appendChild(div);
     });
 
-    // Atur tombol navigasi
     document.getElementById('tombolSebelum').disabled = nomorSekarang === 0;
     if (nomorSekarang === daftarSoal.length - 1) {
         document.getElementById('tombolSelanjutnya').classList.add('sembunyi');
@@ -646,7 +638,7 @@ function soalBerikutnya() {
 }
 
 // ======================================
-// TOMBOL NOMOR
+// TOMBOL NAVIGASI NOMOR
 // ======================================
 function buatTombolNavigasi() {
     const wadah = document.getElementById('kotakNomor');
@@ -678,8 +670,8 @@ function perbaruiTombolNomor() {
 function konfirmasiSelesai() {
     const sudahDijawab = Object.keys(jawabanPengguna).length;
     const pesan = sudahDijawab < daftarSoal.length
-        ? `Anda baru menjawab ${sudahDijawab} dari ${daftarSoal.length} soal.\nYakin ingin mengumpulkan ujian?`
-        : `Anda menjawab ${sudahDijawab} dari ${daftarSoal.length} soal.\nYakin ingin mengumpulkan ujian?`;
+        ? `Anda menjawab ${sudahDijawab} dari ${daftarSoal.length} soal (${document.getElementById('pilihMapel').value}).\nYakin ingin mengumpulkan ujian?`
+        : `Anda menjawab semua ${daftarSoal.length} soal (${document.getElementById('pilihMapel').value}).\nYakin ingin mengumpulkan ujian?`;
 
     if (confirm(pesan)) {
         kirimUjian();
@@ -692,7 +684,6 @@ function konfirmasiSelesai() {
 function kirimUjian() {
     clearInterval(penghitungWaktu);
 
-    // Hitung jumlah benar
     jumlahBenar = 0;
     daftarSoal.forEach((soal, nomor) => {
         if (jawabanPengguna[nomor] === soal.jawabanBenar) {
@@ -700,26 +691,25 @@ function kirimUjian() {
         }
     });
 
-    // Hitung nilai
     nilaiAkhir = Math.round((jumlahBenar / daftarSoal.length) * 100);
 
-    // Simpan hasil ke halaman Admin
     simpanHasilKeAdmin();
 
     // Keluar dari sesi login
     localStorage.removeItem('pesertaCBT');
 
-    // Pindah ke halaman hasil
     window.location.href = "hasil.html";
 }
 
 // ======================================
-// SIMPAN HASIL KE ADMIN
+// SIMPAN HASIL
 // ======================================
 function simpanHasilKeAdmin() {
+    const mapelDipilih = document.getElementById('pilihMapel').value;
     const hasil = {
         nama: dataPeserta.nama,
         kelas: dataPeserta.kelas || '-',
+        mataPelajaran: mapelDipilih,
         total: daftarSoal.length,
         benar: jumlahBenar,
         salah: daftarSoal.length - jumlahBenar,
