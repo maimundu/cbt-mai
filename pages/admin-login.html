@@ -254,24 +254,22 @@ async function login() {
   const user = document.getElementById('user').value.trim();
   const pass = document.getElementById('pass').value.trim();
 
+  alert("📤 Sedang mengecek: User=" + user + " | Pass=" + pass); // ← TAMBAHKAN INI
+
   if (!user || !pass) {
     alert("⚠️ Silakan isi Nama Pengguna dan Kata Sandi!");
     return;
   }
 
-  // ✅ CEK AKUN LANGSUNG DARI GOOGLE SHEETS
   const res = await bacaData('loginAdmin', { user, pass });
 
+  alert("📥 Balasan dari Server: " + JSON.stringify(res)); // ← TAMBAHKAN INI
+
   if (res.status === "sukses") {
-    // Simpan status login ke browser
-    localStorage.setItem('adminCBT', JSON.stringify({
-      nama: res.nama,
-      masuk: true
-    }));
-    // Buka Halaman Dasbor Admin
+    localStorage.setItem('adminCBT', JSON.stringify({nama: res.nama, masuk: true}));
     window.location.href = "admin-dashboard.html";
   } else {
-    alert("❌ Nama pengguna atau kata sandi salah!");
+    alert("❌ Login gagal! " + (res.pesan || "Nama atau kata sandi salah"));
   }
 }
 
