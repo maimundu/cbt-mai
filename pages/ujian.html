@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ujian Online — CBT</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
+    <style>
+        :root {
+            --utama: #7c3aed;
+            --gelap: #1e293b;
+            --abu: #64748b;
+            --muda: #f8fafc;
+            --batas: #e2e8f0;
+            --sukses: #10b981;
+            --peringatan: #f59e0b;
+            --bahaya: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f1f5f9;
+            min-height: 100vh;
+        }
+
+        nav {
+            background: linear-gradient(135deg, var(--utama), #6d28d9);
+            color: white;
+            padding: 14px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            box-shadow: 0 2px 10px rgba(124,58,237,0.2);
+        }
+
+        .nav-kiri h1 {
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .nav-kanan {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .kotak-waktu {
+            background: rgba(255,255,255,0.2);
+            padding: 6px 16px;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 15px;
+        }
+
+        .kotak-waktu.habis { background: var(--bahaya); }
+
+        .tombol-akhir {
+            background: white;
+            color: var(--utama);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tombol-akhir:hover {
+            background: #f3e8ff;
+        }
+
+        .wadah {
+            max-width: 900px;
+            margin: 24px auto;
+            padding: 0 20px;
+        }
+
+        /* === HALAMAN SEBELUM UJIAN === */
+        .kartu-mulai {
+            background: white;
+            border-radius: 16px;
+            padding: 40px 32px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.06);
+            text-align: center;
+        }
+
+        .kartu-mulai h2 {
+            color: var(--gelap);
+            margin-bottom: 12px;
+        }
+
+        .kartu-mulai p {
+            color: var(--abu);
+            margin-bottom: 24px;
+        }
+
+        .info-pengguna {
+            background: #f0fdf4;
+            border-left: 3px solid #10b981;
+            padding: 14px 16px;
+            border-radius: 0 10px 10px 0;
+            max-width: 400px;
+            margin: 0 auto 20px;
+            text-align: left;
+        }
+
+        .info-pengguna .label {
+            font-size: 13px;
+            color: #166534;
+            font-weight: 500;
+        }
+
+        .info-pengguna .nilai {
+            font-size: 16px;
+            color: #14532d;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+
+        .grup-input {
+            max-width: 400px;
+            margin: 0 auto 16px;
+            text-align: left;
+        }
+
+        .grup-input label {
+            display: block;
+            margin-bottom: 6px;
+            font-weight: 500;
+            color: var(--gelap);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px 14px;
+            font-size: 15px;
+            border: 2px solid var(--batas);
+            border-radius: 10px;
+            outline: none;
+        }
+
+        input:focus, select:focus {
+            border-color: var(--utama);
+            box-shadow: 0 0 0 3px rgba(124,58,237,0.1);
+        }
+
+        input[readonly] {
+            background: #f8fafc;
+            color: var(--abu);
+            cursor: not-allowed;
+        }
+
+        .tombol-primer {
+            background: var(--utama);
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tombol-primer:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(124,58,237,0.3);
+        }
+
+        .info-aturan {
+            background: #faf5ff;
+            border-left: 3px solid var(--utama);
+            padding: 16px;
+            border-radius: 0 10px 10px 0;
+            max-width: 500px;
+            margin: 20px auto;
+            text-align: left;
+            font-size: 14px;
+            color: #4c1d95;
+            line-height: 1.6;
+        }
+
+        .pilih-pengguna {
+            max-width: 400px;
+            margin: 0 auto 16px;
+            text-align: left;
+        }
+        /* === AREA UJIAN === */
+        .area-ujian {
+            display: none;
+        }
+
+        .kartu-soal {
+            background: white;
+            border-radius: 16px;
+            padding: 28px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.05);
+            margin-bottom: 20px;
+        }
+
+        .nomor-soal {
+            display: inline-block;
+            background: var(--utama);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+
+        .tag-mapel {
+            display: inline-block;
+            background: #ede9fe;
+            color: #6d28d9;
+            font-size: 13px;
+            padding: 3px 10px;
+            border-radius: 12px;
+            margin-left: 8px;
+        }
+
+        .teks-soal {
+            font-size: 17px;
+            color: var(--gelap);
+            line-height: 1.7;
+            margin-bottom: 20px;
+        }
+
+        .gambar-soal {
+            max-width: 100%;
+            max-height: 300px;
+            object-fit: contain;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            border: 1px solid var(--batas);
+        }
+
+        .daftar-pilihan {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .pilihan {
+            border: 2px solid var(--batas);
+            border-radius: 10px;
+            padding: 14px 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .pilihan:hover {
+            border-color: var(--utama);
+            background: #faf5ff;
+        }
+
+        .pilihan.terpilih {
+            border-color: var(--utama);
+            background: #f3e8ff;
+            font-weight: 500;
+        }
+
+        .pilihan span {
+            font-weight: 600;
+            color: var(--utama);
+            margin-right: 10px;
+        }
+
+        /* === NAVIGASI SOAL === */
+        .baris-navigasi {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .tombol-nav {
+            padding: 10px 20px;
+            font-size: 14px;
+            font-weight: 600;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tombol-nav:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        .tombol-sebelum { background: #e2e8f0; color: #334155; }
+        .tombol-selanjutnya { background: var(--utama); color: white; }
+        .tombol-kirim { background: var(--sukses); color: white; }
+
+        .kotak-nomor {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-top: 20px;
+        }
+
+        .tombol-nomor {
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            border: 2px solid var(--batas);
+            background: white;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+
+        .tombol-nomor:hover { border-color: var(--utama); }
+        .tombol-nomor.sudah { background: #dbeafe; border-color: #3b82f6; color: #1d4ed8; }
+        .tombol-nomor.aktif { background: var(--utama); color: white; border-color: var(--utama); }
+
+        .sembunyi { display: none !important; }
+
+        .peringatan-waktu {
+            background: #fef3c7;
+            border-left: 3px solid var(--peringatan);
+            padding: 10px 14px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 16px;
+            color: #92400e;
+            font-size: 14px;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <div class="nav-kiri">
+        <h1>📝 Ujian Online</h1>
+    </div>
+    <div class="nav-kanan">
+        <div class="kotak-waktu" id="kotakWaktu">⏱️ 00:00:00</div>
+        <button class="tombol-akhir sembunyi" id="tombolAkhir" onclick="konfirmasiSelesai()">Selesai</button>
+    </div>
+</nav>
+
+<div class="wadah">
+
+    <!-- =================================== -->
+    <!-- HALAMAN AWAL: PILIH PENGGUNA & PILIH MAPEL -->
+    <!-- =================================== -->
+    <div id="halamanMulai">
+        <div class="kartu-mulai">
+            <h2>Selamat Datang di Ujian Online 📝</h2>
+            <p>Silakan pilih nama peserta dan mata pelajaran sebelum memulai ujian.</p>
+
+            <!-- PILIH PENGGUNA DARI DAFTAR ADMIN -->
+            <div class="pilih-pengguna">
+                <label for="pilihPengguna">👤 Nama Peserta</label>
+                <select id="pilihPengguna" required>
+                    <option value="">— Pilih Nama Peserta —</option>
+                    <!-- Daftar nama akan dimuat otomatis dari admin-pengguna.html -->
+                </select>
+            </div>
+
+            <div class="grup-input">
+                <label for="pilihMapel">📚 Mata Pelajaran</label>
+                <select id="pilihMapel">
+                    <option value="Semua">Semua Mata Pelajaran</option>
+                    <option value="Matematika">Matematika</option>
+                    <option value="Bahasa Indonesia">Bahasa Indonesia</option>
+                    <option value="Bahasa Inggris">Bahasa Inggris</option>
+                    <option value="IPA">IPA</option>
+                    <option value="IPS">IPS</option>
+                    <option value="PKN">PKN</option>
+                    <option value="Agama">Agama</option>
+                    <option value="TIK">TIK / Informatika</option>
+                    <option value="Lainnya">Lainnya</option>
+                </select>
+            </div>
+
+            <div class="grup-input">
+                <label for="lamaUjian">⏱️ Waktu Ujian (Menit)</label>
+                <input type="number" id="lamaUjian" value="60" min="5" max="300">
+            </div>
+
+            <div class="info-aturan">
+                <strong>📋 Aturan Ujian:</strong>
+                <ul style="margin:8px 0 8px 20px; padding:0;">
+                    <li>Pilih nama peserta dari daftar yang sudah terdaftar</li>
+                    <li>Pilih mata pelajaran untuk memfilter soal</li>
+                    <li>Jawaban dapat diubah sebelum menekan tombol <strong>Selesai</strong></li>
+                    <li>Waktu akan berjalan otomatis saat ujian dimulai</li>
+                    <li>Jika waktu habis, ujian akan dikirim otomatis</li>
+                </ul>
+            </div>
+
+            <button class="tombol-primer" onclick="mulaiUjian()">🚀 Mulai Ujian</button>
+        </div>
+    </div>
+
+    <!-- =================================== -->
+    <!-- AREA UJIAN -->
+    <!-- =================================== -->
+    <div id="areaUjian" class="area-ujian">
+        <div class="peringatan-waktu" id="peringatanWaktu">⚠️ Waktu tinggal sedikit!</div>
+
+        <div class="kartu-soal">
+            <div class="nomor-soal">
+                Soal <span id="nomorSaatIni">1</span> dari <span id="jumlahSoal">0</span>
+                <span class="tag-mapel" id="labelMapel"></span>
+            </div>
+
+            <div class="teks-soal" id="teksSoal"></div>
+            <img id="gambarSoal" class="gambar-soal sembunyi" alt="Gambar Soal">
+
+            <div class="daftar-pilihan" id="wadahPilihan"></div>
+
+            <div class="baris-navigasi">
+                <button class="tombol-nav tombol-sebelum" id="tombolSebelum" onclick="soalSebelumnya()">← Sebelumnya</button>
+                <button class="tombol-nav tombol-selanjutnya" id="tombolSelanjutnya" onclick="soalBerikutnya()">Selanjutnya →</button>
+                <button class="tombol-nav tombol-kirim sembunyi" id="tombolKirim" onclick="konfirmasiSelesai()">Kumpulkan ✅</button>
+            </div>
+        </div>
+
+        <div class="kartu-soal">
+            <h3 style="font-size:16px; margin-bottom:12px;">Navigasi Soal</h3>
+            <p style="font-size:13px; color:var(--abu); margin-bottom:10px;">
+                <span style="background:#dbeafe; padding:2px 8px; border-radius:4px;">Biru</span> Sudah dijawab &nbsp;
+                <span style="background:white; border:2px solid #e2e8f0; padding:2px 8px; border-radius:4px;">Putih</span> Belum dijawab
+            </p>
+            <div class="kotak-nomor" id="kotakNomor"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+// ======================================
+// VARIABEL GLOBAL
+// ======================================
+let daftarSoal = [];
+let soalTerpilih = [];
+let jawabanPengguna = {};
+let nomorSekarang = 0;
+let sisaWaktuDetik = 0;
+let penghitungWaktu;
+let jumlahBenar = 0;
+let nilaiAkhir = 0;
+let namaPenggunaSaatIni = "";
+
+// ======================================
+// MUAT DAFTAR PENGGUNA SAAT HALAMAN DIBUKA
+// ======================================
+window.onload = function() {
+    muatDaftarPengguna();
+};
+
+function muatDaftarPengguna() {
+    const daftarPengguna = JSON.parse(localStorage.getItem('daftarPenggunaCBT') || '[]');
+    const pilih = document.getElementById('pilihPengguna');
+
+    // Hapus opsi lama (kecuali "Pilih Nama")
+    while (pilih.options.length > 1) {
+        pilih.remove(1);
+    }
+
+    // Tambahkan nama pengguna dari admin-pengguna.html
+    daftarPengguna.forEach(pengguna => {
+        const opsi = document.createElement('option');
+        opsi.value = pengguna.nama;
+        opsi.textContent = pengguna.nama + " (" + (pengguna.kelas || "Tanpa Kelas") + ")";
+        pilih.appendChild(opsi);
+    });
+
+    // Jika tidak ada pengguna terdaftar
+    if (daftarPengguna.length === 0) {
+        const opsi = document.createElement('option');
+        opsi.value = "";
+        opsi.textContent = "⚠️ Belum ada pengguna terdaftar";
+        opsi.disabled = true;
+        pilih.appendChild(opsi);
+    }
+}
+
+// ======================================
+// MULAI UJIAN
+// ======================================
+function mulaiUjian() {
+    const nama = document.getElementById('pilihPengguna').value;
+    const mapel = document.getElementById('pilihMapel').value;
+    const lama = parseInt(document.getElementById('lamaUjian').value);
+
+    if (!nama) {
+        alert("⚠️ Silakan pilih nama peserta terlebih dahulu!\nJika belum ada nama, silakan daftarkan dulu di halaman Admin → Pengguna.");
+        document.getElementById('pilihPengguna').focus();
+        return;
+    }
+
+    // Simpan nama untuk dipakai di hasil
+    namaPenggunaSaatIni = nama;
+    localStorage.setItem('namaPenggunaCBT', nama);
+
+    // Ambil soal dari penyimpanan
+    const semuaSoal = JSON.parse(localStorage.getItem('bankSoalCBT') || '[]');
+    if (semuaSoal.length === 0) {
+        alert("⚠️ Belum ada soal yang tersedia! Hubungi admin untuk menambahkan soal terlebih dahulu.");
+        return;
+    }
+
+    // Filter berdasarkan mata pelajaran
+    if (mapel === "Semua") {
+        soalTerpilih = semuaSoal;
+    } else {
+        soalTerpilih = semuaSoal.filter(s => s.mapel === mapel);
+    }
+
+    if (soalTerpilih.length === 0) {
+        alert(`⚠️ Belum ada soal untuk mata pelajaran: ${mapel}`);
+        return;
+    }
+
+    // Siapkan tampilan ujian
+    daftarSoal = soalTerpilih;
+    jawabanPengguna = {};
+    nomorSekarang = 0;
+    sisaWaktuDetik = lama * 60;
+
+    // Sembunyikan halaman mulai, tampilkan ujian
+    document.getElementById('halamanMulai').classList.add('sembunyi');
+    document.getElementById('areaUjian').classList.remove('area-ujian');
+    document.getElementById('areaUjian').style.display = 'block';
+    document.getElementById('jumlahSoal').textContent = daftarSoal.length;
+    document.getElementById('tombolAkhir').classList.remove('sembunyi');
+
+    buatTombolNavigasi();
+    tampilkanSoal();
+    mulaiHitungWaktu();
+}
+
+// ======================================
+// FUNGSI WAKTU
+// ======================================
+function mulaiHitungWaktu() {
+    penghitungWaktu = setInterval(() => {
+        sisaWaktuDetik--;
+        const jam = Math.floor(sisaWaktuDetik / 3600);
+        const menit = Math.floor((sisaWaktuDetik % 3600) / 60);
+        const detik = sisaWaktuDetik % 60;
+        document.getElementById('kotakWaktu').textContent =
+            `⏱️ ${String(jam).padStart(2,'0')}:${String(menit).padStart(2,'0')}:${String(detik).padStart(2,'0')}`;
+
+        // Peringatan 5 menit terakhir
+        if (sisaWaktuDetik === 300) {
+            document.getElementById('peringatanWaktu').style.display = 'block';
+            document.getElementById('kotakWaktu').classList.add('habis');
+        }
+
+        // Waktu habis → kirim otomatis
+        if (sisaWaktuDetik <= 0) {
+            clearInterval(penghitungWaktu);
+            alert("⏰ Waktu habis! Jawaban akan dikirim otomatis.");
+            kirimUjian();
+        }
+    }, 1000);
+}
+
+// ======================================
+// TAMPILKAN SOAL
+// ======================================
+function tampilkanSoal() {
+    const soal = daftarSoal[nomorSekarang];
+    document.getElementById('nomorSaatIni').textContent = nomorSekarang + 1;
+    document.getElementById('teksSoal').textContent = soal.soal;
+    document.getElementById('labelMapel').textContent = soal.mapel || "Lainnya";
+
+    // Tampilkan gambar jika ada
+    if (soal.gambar) {
+        document.getElementById('gambarSoal').src = soal.gambar;
+        document.getElementById('gambarSoal').classList.remove('sembunyi');
+    } else {
+        document.getElementById('gambarSoal').classList.add('sembunyi');
+    }
+
+    // Tampilkan pilihan A–E
+    const wadah = document.getElementById('wadahPilihan');
+    wadah.innerHTML = "";
+    const huruf = ['A', 'B', 'C', 'D', 'E'];
+    soal.pilihan.forEach((teks, idx) => {
+        const dipilih = jawabanPengguna[nomorSekarang] === idx ? "terpilih" : "";
+        const div = document.createElement('div');
+        div.className = `pilihan ${dipilih}`;
+        div.innerHTML = `<span>${huruf[idx]}.</span> ${teks}`;
+        div.onclick = () => pilihJawaban(idx);
+        wadah.appendChild(div);
+    });
+
+    // Atur tombol navigasi
+    document.getElementById('tombolSebelum').disabled = nomorSekarang === 0;
+    if (nomorSekarang === daftarSoal.length - 1) {
+        document.getElementById('tombolSelanjutnya').classList.add('sembunyi');
+        document.getElementById('tombolKirim').classList.remove('sembunyi');
+    } else {
+        document.getElementById('tombolSelanjutnya').classList.remove('sembunyi');
+        document.getElementById('tombolKirim').classList.add('sembunyi');
+    }
+
+    perbaruiTombolNomor();
+}
+
+// ======================================
+// PILIH JAWABAN
+// ======================================
+function pilihJawaban(indeks) {
+    jawabanPengguna[nomorSekarang] = indeks;
+    tampilkanSoal();
+}
+
+// ======================================
+// NAVIGASI SOAL
+// ======================================
+function soalSebelumnya() {
+    if (nomorSekarang > 0) {
+        nomorSekarang--;
+        tampilkanSoal();
+    }
+}
+
+function soalBerikutnya() {
+    if (nomorSekarang < daftarSoal.length - 1) {
+        nomorSekarang++;
+        tampilkanSoal();
+    }
+}
+
+// ======================================
+// TOMBOL NOMOR
+// ======================================
+function buatTombolNavigasi() {
+    const wadah = document.getElementById('kotakNomor');
+    wadah.innerHTML = "";
+    for (let i = 0; i < daftarSoal.length; i++) {
+        const btn = document.createElement('button');
+        btn.className = "tombol-nomor";
+        btn.textContent = i + 1;
+        btn.onclick = () => {
+            nomorSekarang = i;
+            tampilkanSoal();
+        };
+        wadah.appendChild(btn);
+    }
+}
+
+function perbaruiTombolNomor() {
+    const tombol = document.querySelectorAll('.tombol-nomor');
+    tombol.forEach((btn, i) => {
+        btn.classList.remove('aktif', 'sudah');
+        if (i === nomorSekarang) btn.classList.add('aktif');
+        else if (jawabanPengguna[i] !== undefined) btn.classList.add('sudah');
+    });
+}
+
+// ======================================
+// KONFIRMASI & KIRIM UJIAN
+// ======================================
+function konfirmasiSelesai() {
+    const sudahDijawab = Object.keys(jawabanPengguna).length;
+    const pesan = sudahDijawab < daftarSoal.length
+        ? `Anda baru menjawab ${sudahDijawab} dari ${daftarSoal.length} soal.\nYakin ingin mengumpulkan ujian?`
+        : `Anda menjawab ${sudahDijawab} dari ${daftarSoal.length} soal.\nYakin ingin mengumpulkan ujian?`;
+
+    if (confirm(pesan)) {
+        kirimUjian();
+    }
+}
+
+// ======================================
+// KIRIM & HITUNG NILAI
+// ======================================
+function kirimUjian() {
+    clearInterval(penghitungWaktu);
+
+    // Hitung jumlah benar
+    jumlahBenar = 0;
+    daftarSoal.forEach((soal, nomor) => {
+        if (jawabanPengguna[nomor] === soal.jawabanBenar) {
+            jumlahBenar++;
+        }
+    });
+
+    // Hitung nilai
+    nilaiAkhir = Math.round((jumlahBenar / daftarSoal.length) * 100);
+
+    // Simpan hasil ke halaman Admin
+    simpanHasilKeAdmin();
+
+    // Pindah ke halaman hasil
+    window.location.href = "hasil.html";
+}
+
+// ======================================
+// SIMPAN HASIL KE ADMIN
+// ======================================
+function simpanHasilKeAdmin() {
+    const hasil = {
+        nama: namaPenggunaSaatIni,
+        total: daftarSoal.length,
+        benar: jumlahBenar,
+        salah: daftarSoal.length - jumlahBenar,
+        nilai: nilaiAkhir,
+        waktu: new Date().toLocaleString('id-ID', { dateStyle: 'full', timeStyle: 'short' })
+    };
+
+    let semuaHasil = [];
+    const tersimpan = localStorage.getItem('hasilUjianCBT');
+    if (tersimpan) {
+        semuaHasil = JSON.parse(tersimpan);
+    }
+    semuaHasil.push(hasil);
+    localStorage.setItem('hasilUjianCBT', JSON.stringify(semuaHasil));
+}
+</script>
+
+</body>
+</html>
